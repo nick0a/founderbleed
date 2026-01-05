@@ -177,3 +177,51 @@ export const roleRecommendations = pgTable('role_recommendations', {
   tasksList: jsonb('tasks_list'), // [{task: string, hoursPerWeek: number}]
   createdAt: timestamp('created_at').defaultNow()
 });
+
+// Subscriptions
+export const subscriptions = pgTable('subscriptions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  stripeCustomerId: text('stripe_customer_id'),
+  stripeSubscriptionId: text('stripe_subscription_id'),
+  tier: text('tier'), // 'starter', 'pro', 'enterprise'
+  status: text('status'), // 'active', 'cancelled', 'past_due', 'trialing'
+  currentPeriodStart: timestamp('current_period_start'),
+  currentPeriodEnd: timestamp('current_period_end'),
+  llmBudgetCents: integer('llm_budget_cents'), // monthly budget
+  llmSpentCents: integer('llm_spent_cents').default(0),
+  createdAt: timestamp('created_at').defaultNow(),
+  cancelledAt: timestamp('cancelled_at')
+});
+
+// BYOK Keys
+export const byokKeys = pgTable('byok_keys', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  provider: text('provider'), // 'openai', 'anthropic', 'google'
+  apiKeyEncrypted: text('api_key_encrypted').notNull(),
+  priority: text('priority').default('budget_first'), // 'byok_first', 'budget_first', 'byok_premium_only'
+  createdAt: timestamp('created_at').defaultNow()
+});
+
+// Shared reports (email-gated)
+export const sharedReports = pgTable('shared_reports', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  auditRunId: uuid('audit_run_id').references(() => auditRuns.id, { onDelete: 'cascade' }),
+  shareToken: text('share_token').unique().notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  expiresAt: timestamp('expires_at'), // 30 days from creation
+  ownerUserId: uuid('owner_user_id').references(() => users.id),
+  revokedAt: timestamp('revoked_at')
+});
+
+// Report access log (lead capture)
+export const reportAccessLog = pgTable('report_access_log', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  sharedReportId: uuid('shared_report_id').references(() => sharedReports.id, { onDelete: 'cascade' }),
+  viewerEmail: text('viewer_email').notNull(),
+  emailVerified: boolean('email_verified').default(false),
+  verificationToken: text('verification_token'),
+  accessedAt: timestamp('accessed_at').defaultNow(),
+  convertedToSignup: boolean('converted_to_signup').default(false)
+});

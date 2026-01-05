@@ -22,6 +22,13 @@
       "when": 1767600631640,
       "tag": "0002_wise_spitfire",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1767600953918,
+      "tag": "0003_spotty_drax",
+      "breakpoints": true
     }
   ]
 }
