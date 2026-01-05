@@ -426,8 +426,8 @@ export default function ResultsPage() {
         .filter(e => showReconciled || !e.reconciled)
         .filter(e => showNonWork || e.eventCategory === 'work' || !e.eventCategory)
         .sort((a, b) => {
-          const aVal = a[sortConfig.key as keyof AuditEvent];
-          const bVal = b[sortConfig.key as keyof AuditEvent];
+          const aVal = a[sortConfig.key as keyof AuditEvent] ?? '';
+          const bVal = b[sortConfig.key as keyof AuditEvent] ?? '';
           if (sortConfig.direction === 'asc') {
             return aVal < bVal ? -1 : 1;
           }
@@ -493,6 +493,10 @@ export default function ResultsPage() {
           <Link href="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
             <Home className="h-4 w-4" />
             Home
+          </Link>
+          <span className="text-muted-foreground">/</span>
+          <Link href="/dashboard" className="text-muted-foreground hover:text-foreground">
+            Dashboard
           </Link>
           <span className="text-muted-foreground">/</span>
           <span className="font-medium">Results</span>
@@ -752,7 +756,7 @@ export default function ResultsPage() {
                       <Select
                         value={event.finalTier || 'founder'}
                         onValueChange={(value) => updateEventTier(event.id, value)}
-                        disabled={event.reconciled || (event.eventCategory && event.eventCategory !== 'work')}
+                        disabled={event.reconciled || (!!event.eventCategory && event.eventCategory !== 'work')}
                       >
                         <SelectTrigger className="w-32">
                           <SelectValue />

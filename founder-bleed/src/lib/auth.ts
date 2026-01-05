@@ -30,7 +30,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   events: {
     async linkAccount({ user, account }) {
       // Store encrypted calendar tokens after account is linked (user exists in DB)
-      if (account.provider === 'google' && account.access_token) {
+      if (account.provider === 'google' && account.access_token && user.id) {
         try {
           // Check if connection already exists
           const existing = await db.query.calendarConnections.findFirst({

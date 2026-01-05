@@ -65,6 +65,9 @@ export async function POST(request: NextRequest) {
     // Process events
     const processedEvents = [];
     for (const raw of rawEvents) {
+      // Skip events without valid start/end times
+      if (!raw.start || !raw.end) continue;
+
       // Check exclusions
       const isExcluded = (exclusions || ['lunch', 'gym']).some((ex: string) =>
         raw.title.toLowerCase().includes(ex.toLowerCase())
@@ -72,7 +75,7 @@ export async function POST(request: NextRequest) {
       if (isExcluded) continue;
 
       // Detect leave
-      const leaveResult = detectLeave(raw.title, raw.description, raw.isAllDay, raw.eventType);
+      const leaveResult = detectLeave(raw.title, raw.description, raw.isAllDay, raw.eventType ?? undefined);
 
       // Calculate duration
       let durationMinutes = 0;
