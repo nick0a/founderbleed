@@ -274,3 +274,14 @@ export const reportAccessLog = pgTable("report_access_log", {
   accessedAt: timestamp("accessed_at").defaultNow(),
   convertedToSignup: boolean("converted_to_signup").default(false),
 });
+
+export const planningSessions = pgTable("planning_sessions", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
+  auditRunId: text("audit_run_id").references(() => auditRuns.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  sessionType: text("session_type").default("weekly"),
+  conversationHistory: jsonb("conversation_history").default([]),
+  plannedEvents: jsonb("planned_events").default([]),
+  status: text("status").default("active"),
+});
