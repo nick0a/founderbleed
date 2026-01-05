@@ -69,12 +69,14 @@ interface AuditEvent {
   title: string;
   startTime: string;
   endTime: string;
-  duration: number; // in minutes
+  durationMinutes: number; // in minutes
   delegationTier: DelegationTier;
   verticalType: VerticalType;
   eventCategory: EventCategory;
   aiReasoning?: string;
   isOverridden: boolean;
+  finalTier?: string;
+  vertical?: string;
 }
 
 interface AuditData {
@@ -110,11 +112,16 @@ export default function TriagePage() {
           throw new Error('Failed to load audit');
         }
         const data = await response.json();
-        setAudit(data);
-        // Initialize events with default category if not set
-        const eventsWithCategory = (data.events || []).map((event: AuditEvent) => ({
+        setAudit(data.audit || data);
+        // Map API field names to our interface and initialize defaults
+        const eventsWithCategory = (data.events || []).map((event: any) => ({
           ...event,
+          // Map API field names
+          delegationTier: event.finalTier || event.delegationTier || 'founder',
+          verticalType: event.vertical || event.verticalType || 'universal',
           eventCategory: event.eventCategory || 'work',
+          durationMinutes: event.durationMinutes || 0,
+          isOverridden: event.isOverridden || false,
         }));
         setEvents(eventsWithCategory);
       } catch (err) {
@@ -246,10 +253,10 @@ export default function TriagePage() {
   const stats = {
     totalEvents: events.length,
     workEvents: workEvents.length,
-    totalMinutes: workEvents.reduce((sum, e) => sum + e.duration, 0),
+    totalMinutes: workEvents.reduce((sum, e) => sum + (e.durationMinutes || 0), 0),
     delegatableMinutes: workEvents
       .filter(e => e.delegationTier !== 'unique' && e.delegationTier !== 'founder')
-      .reduce((sum, e) => sum + e.duration, 0),
+      .reduce((sum, e) => sum + (e.durationMinutes || 0), 0),
     byTier: DELEGATION_TIERS.reduce((acc, tier) => {
       acc[tier.value] = workEvents.filter(e => e.delegationTier === tier.value).length;
       return acc;
@@ -509,7 +516,7 @@ export default function TriagePage() {
                       <TableCell>
                         <div className="flex items-center gap-1">
                           <Clock className="h-3 w-3 text-muted-foreground" />
-                          <span className="text-sm">{formatDuration(event.duration)}</span>
+                          <span className="text-sm">{formatDuration(event.durationMinutes || 0)}</span>
                         </div>
                       </TableCell>
                       <TableCell>
