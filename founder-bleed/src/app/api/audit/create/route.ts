@@ -14,6 +14,7 @@ import {
   calculatePlanningScore,
 } from "@/lib/planning-score";
 import { encrypt } from "@/lib/encryption";
+import { getActiveSubscription, requireAuditQuota } from "@/lib/subscription";
 
 type AuditRequestBody = {
   dateStart?: string;
@@ -68,6 +69,14 @@ export async function POST(request: NextRequest) {
 
   if (!session?.user?.id) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  const auditQuota = await requireAuditQuota(session.user.id);
+  if (!auditQuota.allowed) {
+    return NextResponse.json(
+      { error: auditQuota.reason },
+      { status: 403 }
+    );
   }
 
   const body = (await request.json().catch(() => null)) as AuditRequestBody | null;
@@ -320,6 +329,16 @@ export async function POST(request: NextRequest) {
         completedAt: new Date(),
       })
       .where(eq(auditRuns.id, auditId));
+
+    if (!user.freeAuditUsed) {
+      const activeSubscription = await getActiveSubscription(session.user.id);
+      if (!activeSubscription) {
+        await db
+          .update(users)
+          .set({ freeAuditUsed: true, updatedAt: new Date() })
+          .where(eq(users.id, session.user.id));
+      }
+    }
 
     return NextResponse.json({
       auditId,

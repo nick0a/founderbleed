@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 
@@ -136,6 +137,7 @@ export default function ProcessingClient({
     "idle" | "running" | "complete" | "error"
   >("idle");
   const [auditId, setAuditId] = useState<string | null>(null);
+  const [quotaBlocked, setQuotaBlocked] = useState(false);
 
   const totalTeamSize = Object.values(team).reduce(
     (sum, value) => sum + value,
@@ -268,6 +270,7 @@ export default function ProcessingClient({
   async function startProcessing() {
     if (processingStatus === "running") return;
     setProcessingStatus("running");
+    setQuotaBlocked(false);
 
     try {
       const profileResponse = await fetch("/api/user/profile", {
@@ -293,12 +296,20 @@ export default function ProcessingClient({
         }),
       });
 
+      const data = (await response.json().catch(() => null)) as
+        | { auditId?: string; error?: string }
+        | null;
+
       if (!response.ok) {
+        if (response.status === 403 && data?.error === "free_audit_used") {
+          setProcessingStatus("error");
+          setQuotaBlocked(true);
+          return;
+        }
         throw new Error("Failed to create audit");
       }
 
-      const data = (await response.json()) as { auditId?: string };
-      if (data.auditId) {
+      if (data?.auditId) {
         setAuditId(data.auditId);
         setProcessingStatus("complete");
       } else {
@@ -349,22 +360,24 @@ export default function ProcessingClient({
             </Button>
           </div>
 
-          <div className="mt-6 rounded-2xl border border-border bg-background p-4">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">
-                {processingStatus === "complete"
-                  ? "Audit complete"
-                  : processingStatus === "error"
-                    ? "Processing failed - try again"
-                    : processingStatus === "running"
-                      ? "Processing calendar events"
-                      : "Ready to process"}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {processingStatus === "complete" ? "100%" : processingStatus === "running" ? "60%" : "0%"}
-              </span>
-            </div>
-            <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-muted">
+            <div className="mt-6 rounded-2xl border border-border bg-background p-4">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">
+                  {processingStatus === "complete"
+                    ? "Audit complete"
+                    : quotaBlocked
+                      ? "Free audit limit reached"
+                      : processingStatus === "error"
+                        ? "Processing failed - try again"
+                        : processingStatus === "running"
+                          ? "Processing calendar events"
+                          : "Ready to process"}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {processingStatus === "complete" ? "100%" : processingStatus === "running" ? "60%" : "0%"}
+                </span>
+              </div>
+              <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-muted">
               <div
                 className={`h-full rounded-full ${
                   processingStatus === "complete"
@@ -375,6 +388,18 @@ export default function ProcessingClient({
                 }`}
               />
             </div>
+
+            {quotaBlocked && (
+              <div className="mt-4 rounded-2xl border border-border bg-muted/40 p-4 text-sm">
+                <p className="font-semibold">Upgrade to run more audits</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Free plans include one audit total. Upgrade to unlock unlimited audits.
+                </p>
+                <Button asChild className="mt-3">
+                  <Link href="/">View plans</Link>
+                </Button>
+              </div>
+            )}
           </div>
         </section>
 

@@ -3,9 +3,10 @@ import { NextResponse } from "next/server";
 
 export default auth((req) => {
   const isLoggedIn = !!req.auth;
-  const isPublicRoute = ["/signin", "/error", "/"].some(
-    (path) => req.nextUrl.pathname === path
-  );
+  const publicPaths = ["/signin", "/error", "/"];
+  const isPublicRoute =
+    publicPaths.includes(req.nextUrl.pathname) ||
+    req.nextUrl.pathname.startsWith("/share");
 
   if (!isLoggedIn && !isPublicRoute) {
     return NextResponse.redirect(new URL("/signin", req.url));

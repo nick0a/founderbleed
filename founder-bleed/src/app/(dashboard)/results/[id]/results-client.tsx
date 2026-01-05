@@ -124,6 +124,8 @@ export default function ResultsClient({
   const [roles, setRoles] = useState<RoleRecommendation[]>(initialRoles);
   const [expandedRoles, setExpandedRoles] = useState<Set<string>>(new Set());
   const [copiedRole, setCopiedRole] = useState<string | null>(null);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [shareStatus, setShareStatus] = useState<"idle" | "loading" | "copied">("idle");
   const [sortKey, setSortKey] = useState<SortKey>("date");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [dragRoleId, setDragRoleId] = useState<string | null>(null);
@@ -294,6 +296,38 @@ export default function ResultsClient({
     }
   }
 
+  async function createShareLink() {
+    setShareStatus("loading");
+    try {
+      const response = await fetch("/api/share/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ auditId }),
+      });
+      const data = (await response.json().catch(() => null)) as { shareUrl?: string } | null;
+      if (response.ok && data?.shareUrl) {
+        setShareUrl(data.shareUrl);
+        setShareStatus("idle");
+      } else {
+        setShareStatus("idle");
+      }
+    } catch (error) {
+      console.error("Failed to create share link", error);
+      setShareStatus("idle");
+    }
+  }
+
+  async function copyShareLink() {
+    if (!shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setShareStatus("copied");
+      setTimeout(() => setShareStatus("idle"), 2000);
+    } catch (error) {
+      console.error("Failed to copy share link", error);
+    }
+  }
+
   function reorderRoles(sourceId: string, targetId: string) {
     if (sourceId === targetId) return;
     setRoles((prev) => {
@@ -454,6 +488,37 @@ export default function ResultsClient({
               Review your calendar, reassign delegable work, and map roles that
               return your time. Every change updates the numbers instantly.
             </p>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold">Share this report</p>
+                <p className="text-xs text-muted-foreground">
+                  Email-gated share link for investors or teammates.
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={createShareLink}
+                disabled={shareStatus === "loading"}
+              >
+                {shareStatus === "loading" ? "Generating..." : "Create link"}
+              </Button>
+            </div>
+            {shareUrl && (
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                <input
+                  value={shareUrl}
+                  readOnly
+                  className="flex-1 rounded-md border border-input bg-background px-2 py-1 text-xs"
+                />
+                <Button variant="outline" size="sm" onClick={copyShareLink}>
+                  {shareStatus === "copied" ? "Copied" : "Copy link"}
+                </Button>
+              </div>
+            )}
           </div>
         </section>
 

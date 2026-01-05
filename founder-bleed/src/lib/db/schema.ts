@@ -218,3 +218,59 @@ export const roleRecommendations = pgTable("role_recommendations", {
   tasksList: jsonb("tasks_list"),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+export const subscriptions = pgTable("subscriptions", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  tier: text("tier"),
+  status: subscriptionStatusEnum("status"),
+  currentPeriodStart: timestamp("current_period_start"),
+  currentPeriodEnd: timestamp("current_period_end"),
+  llmBudgetCents: integer("llm_budget_cents"),
+  llmSpentCents: integer("llm_spent_cents").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  cancelledAt: timestamp("cancelled_at"),
+});
+
+export const byokKeys = pgTable("byok_keys", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
+  provider: text("provider"),
+  apiKeyEncrypted: text("api_key_encrypted").notNull(),
+  priority: text("priority").default("budget_first"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const sharedReports = pgTable(
+  "shared_reports",
+  {
+    id: text("id").primaryKey(),
+    auditRunId: text("audit_run_id").references(() => auditRuns.id, {
+      onDelete: "cascade",
+    }),
+    shareToken: text("share_token").notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+    expiresAt: timestamp("expires_at"),
+    ownerUserId: text("owner_user_id").references(() => users.id),
+    revokedAt: timestamp("revoked_at"),
+  },
+  (table) => ({
+    shareTokenIdx: uniqueIndex("shared_reports_share_token_idx").on(
+      table.shareToken
+    ),
+  })
+);
+
+export const reportAccessLog = pgTable("report_access_log", {
+  id: text("id").primaryKey(),
+  sharedReportId: text("shared_report_id").references(() => sharedReports.id, {
+    onDelete: "cascade",
+  }),
+  viewerEmail: text("viewer_email").notNull(),
+  emailVerified: boolean("email_verified").default(false),
+  verificationToken: text("verification_token"),
+  accessedAt: timestamp("accessed_at").defaultNow(),
+  convertedToSignup: boolean("converted_to_signup").default(false),
+});
