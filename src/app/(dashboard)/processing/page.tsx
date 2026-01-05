@@ -32,11 +32,13 @@ const HOURS_PER_YEAR = 2080;
 function ProcessingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const auditId = searchParams.get('auditId');
+  const urlAuditId = searchParams.get('auditId');
 
   // Processing state
+  const [auditId, setAuditId] = useState<string | null>(urlAuditId);
   const [processingStatus, setProcessingStatus] = useState<'processing' | 'complete'>('processing');
   const [processingProgress, setProcessingProgress] = useState(0);
+  const [auditError, setAuditError] = useState<string | null>(null);
 
   // Step 1: Team Composition
   const [team, setTeam] = useState<TeamComposition>({
@@ -81,6 +83,40 @@ function ProcessingContent() {
       ? salaryValue * HOURS_PER_YEAR
       : salaryValue
     : null;
+
+  // Create audit on page load if no auditId provided
+  useEffect(() => {
+    const createAudit = async () => {
+      if (auditId) return; // Already have an auditId
+      
+      try {
+        const res = await fetch('/api/audit/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            dateRange: 'month', // Default to last month
+          }),
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          if (data.auditId) {
+            setAuditId(data.auditId);
+          } else if (data.audit?.id) {
+            setAuditId(data.audit.id);
+          }
+        } else {
+          const error = await res.json();
+          setAuditError(error.error || 'Failed to create audit');
+        }
+      } catch (err) {
+        console.error('Error creating audit:', err);
+        setAuditError('Failed to create audit');
+      }
+    };
+    
+    createAudit();
+  }, [auditId]);
 
   // Simulate processing progress
   useEffect(() => {
@@ -532,25 +568,34 @@ function ProcessingContent() {
           </details>
         </div>
 
+        {/* Error Display */}
+        {auditError && (
+          <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <p className="text-red-700 dark:text-red-300 text-sm">{auditError}</p>
+          </div>
+        )}
+
         {/* Continue Button */}
         <div className="mt-8">
           <button
             onClick={handleContinue}
-            disabled={processingStatus !== 'complete' || !qaComplete}
+            disabled={processingStatus !== 'complete' || !qaComplete || !auditId}
             className={`w-full py-4 rounded-lg font-semibold text-lg transition ${
-              processingStatus === 'complete' && qaComplete
+              processingStatus === 'complete' && qaComplete && auditId
                 ? 'bg-blue-600 text-white hover:bg-blue-700'
                 : 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed'
             }`}
           >
             {processingStatus !== 'complete'
               ? 'Processing...'
-              : !qaComplete
-                ? 'Enter your compensation to continue'
-                : 'Review Classifications →'}
+              : !auditId
+                ? 'Creating audit...'
+                : !qaComplete
+                  ? 'Enter your compensation to continue'
+                  : 'Review Classifications →'}
           </button>
           <p className="text-center text-sm text-gray-500 mt-2">
-            {qaComplete && processingStatus === 'complete'
+            {qaComplete && processingStatus === 'complete' && auditId
               ? "You'll be able to adjust event classifications next"
               : ''}
           </p>
