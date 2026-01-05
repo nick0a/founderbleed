@@ -68,6 +68,42 @@ function ProcessingContent() {
   // Step 7-11: Tier Rates (optional)
   const [tierRates, setTierRates] = useState(DEFAULT_RATES);
 
+  // Date range for audit
+  const [dateRange, setDateRange] = useState<'week' | 'month' | 'quarter' | 'year' | 'custom'>('month');
+  const [customDateStart, setCustomDateStart] = useState<string>('');
+  const [customDateEnd, setCustomDateEnd] = useState<string>('');
+
+  // Calculate date range based on selection
+  const getDateRange = () => {
+    const end = new Date();
+    const start = new Date();
+    
+    switch (dateRange) {
+      case 'week':
+        start.setDate(end.getDate() - 7);
+        break;
+      case 'month':
+        start.setMonth(end.getMonth() - 1);
+        break;
+      case 'quarter':
+        start.setMonth(end.getMonth() - 3);
+        break;
+      case 'year':
+        start.setFullYear(end.getFullYear() - 1);
+        break;
+      case 'custom':
+        return {
+          dateStart: customDateStart ? new Date(customDateStart).toISOString() : null,
+          dateEnd: customDateEnd ? new Date(customDateEnd).toISOString() : null,
+        };
+    }
+    
+    return {
+      dateStart: start.toISOString(),
+      dateEnd: end.toISOString(),
+    };
+  };
+
   // Calculate total team size
   const totalTeamSize = Object.values(team).reduce((a, b) => a + b, 0);
 
@@ -84,39 +120,56 @@ function ProcessingContent() {
       : salaryValue
     : null;
 
-  // Create audit on page load if no auditId provided
-  useEffect(() => {
-    const createAudit = async () => {
-      if (auditId) return; // Already have an auditId
-      
-      try {
-        const res = await fetch('/api/audit/create', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            dateRange: 'month', // Default to last month
-          }),
-        });
-        
-        if (res.ok) {
-          const data = await res.json();
-          if (data.auditId) {
-            setAuditId(data.auditId);
-          } else if (data.audit?.id) {
-            setAuditId(data.audit.id);
-          }
-        } else {
-          const error = await res.json();
-          setAuditError(error.error || 'Failed to create audit');
-        }
-      } catch (err) {
-        console.error('Error creating audit:', err);
-        setAuditError('Failed to create audit');
-      }
-    };
+  // Start audit with selected date range
+  const handleStartAudit = async () => {
+    if (auditId) return; // Already have an auditId
     
-    createAudit();
-  }, [auditId]);
+    const { dateStart, dateEnd } = getDateRange();
+    
+    if (!dateStart || !dateEnd) {
+      setAuditError('Please select valid start and end dates');
+      return;
+    }
+    
+    setAuditError(null);
+    setProcessingStatus('processing');
+    setProcessingProgress(0);
+    
+    try {
+      const res = await fetch('/api/audit/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          dateStart,
+          dateEnd,
+        }),
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        if (data.auditId) {
+          setAuditId(data.auditId);
+        } else if (data.audit?.id) {
+          setAuditId(data.audit.id);
+        }
+      } else {
+        const error = await res.json();
+        setAuditError(error.error || 'Failed to create audit');
+        setProcessingStatus('complete');
+      }
+    } catch (err) {
+      console.error('Error creating audit:', err);
+      setAuditError('Failed to create audit');
+      setProcessingStatus('complete');
+    }
+  };
+
+  // Check if we already have an auditId from URL
+  useEffect(() => {
+    if (urlAuditId) {
+      setAuditId(urlAuditId);
+    }
+  }, [urlAuditId]);
 
   // Simulate processing progress
   useEffect(() => {
@@ -509,36 +562,121 @@ function ProcessingContent() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-2xl mx-auto px-4">
-        {/* Processing Status */}
+        {/* Audit Period Selection */}
         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm mb-6">
-          <div className="flex items-center gap-3 mb-4">
-            {processingStatus === 'processing' ? (
-              <div className="animate-spin rounded-full h-6 w-6 border-2 border-blue-500 border-t-transparent"></div>
-            ) : (
-              <div className="h-6 w-6 rounded-full bg-green-500 flex items-center justify-center text-white">
-                ✓
-              </div>
-            )}
-            <h2 className="text-lg font-semibold">
-              {processingStatus === 'processing'
-                ? 'Analyzing your calendar...'
-                : 'Analysis complete!'}
-            </h2>
+          <h3 className="text-lg font-semibold mb-4">Select Audit Period</h3>
+          
+          {/* Preset Buttons */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            {[
+              { key: 'week', label: 'Past Week' },
+              { key: 'month', label: 'Past Month' },
+              { key: 'quarter', label: 'Past 3 Months' },
+              { key: 'year', label: 'Past Year' },
+              { key: 'custom', label: 'Custom Range' },
+            ].map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => setDateRange(key as typeof dateRange)}
+                disabled={!!auditId}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                  dateRange === key
+                    ? 'bg-red-600 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                } ${auditId ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
 
-          {/* Progress Bar */}
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-            <div
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${Math.min(processingProgress, 100)}%` }}
-            ></div>
-          </div>
-          <p className="text-sm text-gray-500 mt-2">
-            {processingStatus === 'processing'
-              ? 'Classifying events, detecting leave, calculating metrics...'
-              : 'Ready to review your results'}
-          </p>
+          {/* Custom Date Inputs */}
+          {dateRange === 'custom' && (
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm text-gray-500 mb-1">Start Date</label>
+                <input
+                  type="date"
+                  value={customDateStart}
+                  onChange={(e) => setCustomDateStart(e.target.value)}
+                  disabled={!!auditId}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-500 mb-1">End Date</label>
+                <input
+                  type="date"
+                  value={customDateEnd}
+                  onChange={(e) => setCustomDateEnd(e.target.value)}
+                  disabled={!!auditId}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Date Range Preview */}
+          {dateRange !== 'custom' && (
+            <p className="text-sm text-gray-500 mb-4">
+              {(() => {
+                const { dateStart, dateEnd } = getDateRange();
+                if (dateStart && dateEnd) {
+                  return `${new Date(dateStart).toLocaleDateString()} - ${new Date(dateEnd).toLocaleDateString()}`;
+                }
+                return '';
+              })()}
+            </p>
+          )}
+
+          {/* Start Audit Button */}
+          {!auditId && (
+            <button
+              onClick={handleStartAudit}
+              disabled={dateRange === 'custom' && (!customDateStart || !customDateEnd)}
+              className={`w-full py-3 rounded-lg font-semibold transition ${
+                dateRange === 'custom' && (!customDateStart || !customDateEnd)
+                  ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed'
+                  : 'bg-red-600 text-white hover:bg-red-700'
+              }`}
+            >
+              Start Calendar Audit
+            </button>
+          )}
         </div>
+
+        {/* Processing Status - Only show when audit started */}
+        {auditId && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm mb-6">
+            <div className="flex items-center gap-3 mb-4">
+              {processingStatus === 'processing' ? (
+                <div className="animate-spin rounded-full h-6 w-6 border-2 border-blue-500 border-t-transparent"></div>
+              ) : (
+                <div className="h-6 w-6 rounded-full bg-green-500 flex items-center justify-center text-white">
+                  ✓
+                </div>
+              )}
+              <h2 className="text-lg font-semibold">
+                {processingStatus === 'processing'
+                  ? 'Analyzing your calendar...'
+                  : 'Analysis complete!'}
+              </h2>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+              <div
+                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${Math.min(processingProgress, 100)}%` }}
+              ></div>
+            </div>
+            <p className="text-sm text-gray-500 mt-2">
+              {processingStatus === 'processing'
+                ? 'Classifying events, detecting leave, calculating metrics...'
+                : 'Ready to review your results'}
+            </p>
+          </div>
+        )}
 
         {/* Q&A Sections */}
         <div className="space-y-6">
