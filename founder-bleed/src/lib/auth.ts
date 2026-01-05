@@ -26,6 +26,53 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       session.user.id = user.id;
       return session;
     },
+    async signIn({ user, account }) {
+      // Handle scope upgrade - update existing calendar connection with new tokens
+      console.log('=== signIn callback ===');
+      console.log('user.id:', user?.id);
+      console.log('account.provider:', account?.provider);
+      console.log('account.scope:', account?.scope);
+      console.log('has access_token:', !!account?.access_token);
+
+      if (account?.provider === 'google' && account.access_token) {
+        const hasWriteScope = account.scope?.includes('calendar.events') || false;
+        console.log('hasWriteScope:', hasWriteScope);
+
+        // Always try to update tokens when we have them
+        try {
+          // We need to get user ID from the database since user.id might not be populated yet
+          const dbUser = await db.query.users.findFirst({
+            where: eq(users.email, user.email!)
+          });
+
+          const userId = user.id || dbUser?.id;
+          console.log('Resolved userId:', userId);
+
+          if (userId) {
+            const existing = await db.query.calendarConnections.findFirst({
+              where: eq(calendarConnections.userId, userId)
+            });
+            console.log('Existing connection found:', !!existing, 'hasWriteAccess:', existing?.hasWriteAccess);
+
+            if (existing) {
+              await db.update(calendarConnections)
+                .set({
+                  accessToken: encrypt(account.access_token),
+                  refreshToken: account.refresh_token ? encrypt(account.refresh_token) : existing.refreshToken,
+                  tokenExpiresAt: account.expires_at ? new Date(account.expires_at * 1000) : null,
+                  scopes: account.scope?.split(' ') || [],
+                  hasWriteAccess: hasWriteScope || existing.hasWriteAccess,
+                })
+                .where(eq(calendarConnections.userId, userId));
+              console.log('Calendar connection updated. hasWriteAccess:', hasWriteScope);
+            }
+          }
+        } catch (error) {
+          console.error('Failed to update calendar connection:', error);
+        }
+      }
+      return true;
+    },
   },
   events: {
     async linkAccount({ user, account }) {

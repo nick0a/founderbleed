@@ -25,7 +25,7 @@ export function MainNav({ className }: { className?: string }) {
           href={item.href}
           className={cn(
             'text-sm font-medium transition-colors hover:text-primary',
-            pathname === item.href
+            pathname === item.href || pathname?.startsWith(item.href + '/')
               ? 'text-foreground'
               : 'text-muted-foreground'
           )}

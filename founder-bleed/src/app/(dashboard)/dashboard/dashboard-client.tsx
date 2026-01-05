@@ -12,7 +12,8 @@ import {
   TrendingUp,
   ArrowRight,
   Settings,
-  Home
+  Home,
+  Sparkles
 } from 'lucide-react';
 
 interface AuditRun {
@@ -64,6 +65,12 @@ export default function DashboardClient() {
           <span className="font-medium">Dashboard</span>
         </div>
         <div className="flex items-center gap-2">
+          <Link href="/planning">
+            <Button variant="outline" size="sm">
+              <Sparkles className="h-4 w-4 mr-2" />
+              Planning
+            </Button>
+          </Link>
           <Link href="/settings">
             <Button variant="outline" size="sm">
               <Settings className="h-4 w-4 mr-2" />

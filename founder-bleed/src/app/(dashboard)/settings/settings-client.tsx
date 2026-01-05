@@ -5,21 +5,29 @@ import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { 
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { 
+import {
   Home,
   Save,
   DollarSign,
   Users,
-  Loader2
+  Loader2,
+  Calendar
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+interface CalendarSettings {
+  calendarViewDays: number;
+  plannableDays: number[];
+}
 
 interface UserSettings {
   salaryAnnual: string | null;
@@ -39,7 +47,18 @@ interface UserSettings {
   juniorBusinessRate: string;
   // Support tier rates
   eaRate: string;
+  // Calendar settings
+  calendarSettings: CalendarSettings;
 }
+
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const VIEW_OPTIONS = [
+  { value: 1, label: '1 Day' },
+  { value: 3, label: '3 Days' },
+  { value: 5, label: '5 Days' },
+  { value: 6, label: '6 Days' },
+  { value: 7, label: '7 Days' },
+];
 
 export default function SettingsClient() {
   const [settings, setSettings] = useState<UserSettings>({
@@ -56,6 +75,10 @@ export default function SettingsClient() {
     juniorEngineeringRate: '40000',
     juniorBusinessRate: '50000',
     eaRate: '25000',
+    calendarSettings: {
+      calendarViewDays: 7,
+      plannableDays: [1, 2, 3, 4, 5], // Mon-Fri
+    },
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -80,6 +103,10 @@ export default function SettingsClient() {
             juniorEngineeringRate: data.juniorEngineeringRate || '40000',
             juniorBusinessRate: data.juniorBusinessRate || '50000',
             eaRate: data.eaRate || '25000',
+            calendarSettings: {
+              calendarViewDays: data.calendarSettings?.calendarViewDays || 7,
+              plannableDays: data.calendarSettings?.plannableDays || [1, 2, 3, 4, 5],
+            },
           });
         }
       } catch (err) {
@@ -103,15 +130,42 @@ export default function SettingsClient() {
 
       if (!response.ok) throw new Error('Failed to save');
       toast.success('Settings saved successfully');
-    } catch (err) {
+    } catch {
       toast.error('Failed to save settings');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleChange = (field: keyof UserSettings, value: string) => {
+  const handleChange = (field: keyof Omit<UserSettings, 'calendarSettings'>, value: string) => {
     setSettings(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleCalendarViewChange = (value: string) => {
+    setSettings(prev => ({
+      ...prev,
+      calendarSettings: {
+        ...prev.calendarSettings,
+        calendarViewDays: parseInt(value),
+      },
+    }));
+  };
+
+  const handlePlannableDayToggle = (dayIndex: number) => {
+    setSettings(prev => {
+      const currentDays = prev.calendarSettings.plannableDays;
+      const newDays = currentDays.includes(dayIndex)
+        ? currentDays.filter(d => d !== dayIndex)
+        : [...currentDays, dayIndex].sort((a, b) => a - b);
+
+      return {
+        ...prev,
+        calendarSettings: {
+          ...prev.calendarSettings,
+          plannableDays: newDays,
+        },
+      };
+    });
   };
 
   if (loading) {
@@ -140,9 +194,71 @@ export default function SettingsClient() {
       <div>
         <h1 className="text-3xl font-bold">Settings</h1>
         <p className="text-muted-foreground mt-1">
-          Configure your compensation and delegation rates
+          Configure your compensation, delegation rates, and calendar preferences
         </p>
       </div>
+
+      {/* Calendar Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Calendar Settings
+          </CardTitle>
+          <CardDescription>
+            Configure your calendar view and which days can be planned
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Calendar View Days */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Calendar View</Label>
+            <Select
+              value={settings.calendarSettings.calendarViewDays.toString()}
+              onValueChange={handleCalendarViewChange}
+            >
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {VIEW_OPTIONS.map(option => (
+                  <SelectItem key={option.value} value={option.value.toString()}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Number of days to display in the calendar view
+            </p>
+          </div>
+
+          {/* Plannable Days */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Days Available for Planning</Label>
+            <p className="text-xs text-muted-foreground">
+              Select which days the AI can suggest events for
+            </p>
+            <div className="flex flex-wrap gap-4">
+              {DAY_NAMES.map((day, index) => (
+                <div key={day} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`day-${index}`}
+                    checked={settings.calendarSettings.plannableDays.includes(index)}
+                    onCheckedChange={() => handlePlannableDayToggle(index)}
+                  />
+                  <Label
+                    htmlFor={`day-${index}`}
+                    className="text-sm cursor-pointer"
+                  >
+                    {day}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Your Compensation */}
       <Card>

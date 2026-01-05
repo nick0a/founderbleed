@@ -7,6 +7,9 @@ import { HowItWorksCarousel } from "@/components/how-it-works-carousel";
 import { DelegationChart } from "@/components/delegation-chart";
 import { Shield, Lock, Trash2 } from "lucide-react";
 
+// Force dynamic rendering to avoid prerendering issues
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
   const session = await auth();
   const isLoggedIn = !!session?.user;
