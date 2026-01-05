@@ -98,6 +98,8 @@ These rules must NEVER be violated:
 | 8 | **Email-gate sharing** | Require email to view |
 | 9 | **Reconcile buttons, not checkboxes** | For triage workflow |
 | 10 | **Engineering left, Business right** | Team composition layout |
+| 11 | **Stripe env var naming** | Pattern: `STRIPE_PRICE_ID_{TIER}_{PERIOD}` |
+| 12 | **NextAuth tables are SINGULAR** | `pgTable('user')` not `pgTable('users')` |
 
 ---
 

@@ -211,6 +211,24 @@ Examples:
 - ❌ `STRIPE_PRICE_ID_STARTER` (missing period suffix)
 
 This ensures all branch implementations are compatible with shared Vercel environment variables.
+
+## 12. NextAuth Drizzle Adapter Table Names (SINGULAR)
+The NextAuth Drizzle adapter requires **singular** database table names:
+
+| Variable Name | Database Table Name | Purpose |
+|---------------|---------------------|---------|
+| `users` | `'user'` | User accounts |
+| `accounts` | `'account'` | OAuth provider accounts |
+| `sessions` | `'session'` | Database sessions |
+| `verificationTokens` | `'verificationToken'` | Email verification |
+
+Examples:
+- ✅ `pgTable('user', { ... })`
+- ✅ `pgTable('account', { ... })`
+- ❌ `pgTable('users', { ... })` - Will cause "relation 'users' does not exist"
+- ❌ `pgTable('accounts', { ... })` - OAuth sign-in will fail silently
+
+**Note:** TypeScript variable names (e.g., `export const users`) can be plural for developer convenience, but the first argument to `pgTable()` must be singular.
 ```
 
 ### 0.4 Environment Configuration
@@ -357,7 +375,7 @@ Before proceeding to Phase 1, verify all of the following. Write tests as you se
 
 **Success criteria:**
 - CLAUDE.md contains project context
-- critical-rules.md exists with all 10 invariants
+- critical-rules.md exists with all 12 invariants
 
 ### SETUP-03: Environment Configured
 
@@ -412,7 +430,7 @@ Phase 0 is complete when ALL of the following are true:
 |-------------|---------------|
 | Next.js app runs | `npm run dev` succeeds, page loads |
 | Memory architecture exists | `.claude/` directory with CLAUDE.md and rules |
-| Critical rules documented | All 10 invariants in critical-rules.md |
+| Critical rules documented | All 12 invariants in critical-rules.md |
 | Environment configured | `.env.local` has all required variables |
 | Database connects | Connection test passes |
 | UI framework ready | shadcn/ui components can be added |
