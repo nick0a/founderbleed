@@ -22,7 +22,25 @@
 2. **Implement the features** — Follow build instructions
 3. **Write and run tests** — Based on test instructions (you decide how to test)
 4. **Verify handoff requirements** — All must be true to proceed
-5. **Automatically proceed to next phase** — Do NOT wait for user confirmation
+5. **Commit to git** — Use conventional commit format (see below)
+6. **Automatically proceed to next phase** — Do NOT wait for user confirmation
+
+### Git Discipline
+
+After completing each phase, commit all changes:
+
+```bash
+git add .
+git commit -m "feat(phase-X): <brief description of what was built>"
+```
+
+Commit message format:
+- `feat(phase-0): project setup and memory architecture`
+- `feat(phase-1): auth and calendar integration`
+- `feat(phase-2): audit engine and classification`
+- ...and so on
+
+This creates clear checkpoints for each phase.
 
 ### Retry Policy
 
