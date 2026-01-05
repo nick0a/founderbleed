@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { sharedReports, audits, reportAccessLog } from '@/lib/db/schema';
+import { sharedReports, audits } from '@/lib/db/schema';
 import { eq, and, isNull } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
 

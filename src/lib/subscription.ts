@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db';
 import { subscriptions, users, audits } from '@/lib/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 // Subscription tiers and their features
 export const SUBSCRIPTION_TIERS = {

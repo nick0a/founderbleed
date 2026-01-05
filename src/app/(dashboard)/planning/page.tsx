@@ -54,7 +54,7 @@ const tierColors: Record<string, string> = {
 };
 
 export default function PlanningPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);

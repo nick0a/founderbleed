@@ -38,10 +38,6 @@ function ProcessingContent() {
   const [processingStatus, setProcessingStatus] = useState<'processing' | 'complete'>('processing');
   const [processingProgress, setProcessingProgress] = useState(0);
 
-  // Q&A Form State
-  const [currentStep, setCurrentStep] = useState(1);
-  const [qaComplete, setQaComplete] = useState(false);
-
   // Step 1: Team Composition
   const [team, setTeam] = useState<TeamComposition>({
     founder: 1,
@@ -58,6 +54,9 @@ function ProcessingContent() {
   const [salaryMode, setSalaryMode] = useState<'annual' | 'hourly'>('annual');
   const [salaryValue, setSalaryValue] = useState<number | null>(null);
   const [currency, setCurrency] = useState('USD');
+
+  // Q&A Form State - qaComplete derived from salaryValue
+  const qaComplete = salaryValue !== null && salaryValue > 0;
 
   // Step 4-6: Equity (optional)
   const [companyValuation, setCompanyValuation] = useState<number | null>(null);
@@ -165,15 +164,6 @@ function ProcessingContent() {
     router,
   ]);
 
-  // Check if Q&A is complete
-  useEffect(() => {
-    // Minimum required: compensation set
-    setQaComplete(salaryValue !== null && salaryValue > 0);
-  }, [salaryValue]);
-
-  // Suppress unused variable warning
-  void currentStep;
-  void setCurrentStep;
 
   // Quick preset handlers
   const annualPresets = [300000, 500000, 800000];
