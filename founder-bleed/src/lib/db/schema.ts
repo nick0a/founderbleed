@@ -91,3 +91,58 @@ export const calendarConnections = pgTable('calendar_connection', {
   connectedAt: timestamp('connected_at').defaultNow(),
   revokedAt: timestamp('revoked_at')
 });
+
+// Audit runs
+export const auditRuns = pgTable('audit_runs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  dateStart: timestamp('date_start', { mode: 'date' }).notNull(),
+  dateEnd: timestamp('date_end', { mode: 'date' }).notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  calendarsIncluded: text('calendars_included').array(),
+  exclusionsUsed: text('exclusions_used').array(),
+  computedMetrics: jsonb('computed_metrics'),
+  planningScore: integer('planning_score'), // 0-100
+  planningAssessment: text('planning_assessment'), // markdown
+  status: text('status').default('pending'), // pending, processing, completed, failed
+  algorithmVersion: text('algorithm_version').default('1.7').notNull(),
+  leaveDaysDetected: integer('leave_days_detected').default(0),
+  leaveHoursExcluded: numeric('leave_hours_excluded').default('0'),
+  frequency: text('frequency').default('manual') // manual, weekly, monthly, annual
+});
+
+// Events
+export const events = pgTable('events', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  auditRunId: uuid('audit_run_id').references(() => auditRuns.id, { onDelete: 'cascade' }),
+  externalEventId: text('external_event_id'),
+  startAt: timestamp('start_at').notNull(),
+  endAt: timestamp('end_at').notNull(),
+  durationMinutes: integer('duration_minutes'),
+  isAllDay: boolean('is_all_day').default(false),
+  calendarId: text('calendar_id'),
+  title: text('title'), // encrypted
+  description: text('description'), // encrypted
+  attendeesCount: integer('attendees_count').default(0),
+  hasMeetLink: boolean('has_meet_link').default(false),
+  isRecurring: boolean('is_recurring').default(false),
+
+  // Classification
+  suggestedTier: text('suggested_tier'), // unique, founder, senior, junior, ea
+  finalTier: text('final_tier'),
+  reconciled: boolean('reconciled').default(false),
+  businessArea: text('business_area'),
+  vertical: text('vertical'), // engineering, business
+  confidenceScore: text('confidence_score'), // high, medium, low
+  keywordsMatched: text('keywords_matched').array(),
+
+  // Leave detection
+  isLeave: boolean('is_leave').default(false),
+  leaveDetectionMethod: text('leave_detection_method'),
+  leaveConfidence: text('leave_confidence'), // high, medium, low
+
+  // Planning
+  planningScore: integer('planning_score'), // 0-100 per event
+
+  createdAt: timestamp('created_at').defaultNow()
+});
