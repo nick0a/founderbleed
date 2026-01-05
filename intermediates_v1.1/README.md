@@ -174,6 +174,24 @@ Phase 10 (Polish) ─── Final validation
 
 ---
 
+## Port Assignments (Local Development)
+
+Each LLM implementation runs on a dedicated port to allow simultaneous local testing:
+
+| LLM | Port | NEXTAUTH_URL |
+|-----|------|--------------|
+| **ChatGPT** | 3000 | `http://localhost:3000` |
+| **Gemini** | 3001 | `http://localhost:3001` |
+| **Claude** | 3002 | `http://localhost:3002` |
+
+**Important:** Configure your assigned port in:
+1. `package.json` scripts: `"dev": "next dev -p YOUR_PORT"`
+2. `.env.local`: `PORT=YOUR_PORT` and `NEXTAUTH_URL=http://localhost:YOUR_PORT`
+
+This prevents conflicts when running multiple implementations simultaneously.
+
+---
+
 ## Getting Started
 
 Begin with [Phase 0: Setup](./phase-0-setup.md).

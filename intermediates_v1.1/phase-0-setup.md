@@ -197,18 +197,55 @@ These rules must NEVER be violated across the entire codebase:
 - Engineering roles on left column
 - Business roles on right column
 - QA Engineer is in engineering column
+
+## 11. Standardized Environment Variable Names
+All Stripe price ID environment variables MUST follow this naming convention:
+- Pattern: `STRIPE_PRICE_ID_{TIER}_{PERIOD}`
+- Tiers: STARTER, PRO, TEAM
+- Periods: MONTHLY, ANNUAL
+
+Examples:
+- ✅ `STRIPE_PRICE_ID_STARTER_MONTHLY`
+- ✅ `STRIPE_PRICE_ID_PRO_ANNUAL`
+- ❌ `STRIPE_PRICE_STARTER_MONTHLY` (missing _ID_)
+- ❌ `STRIPE_PRICE_ID_STARTER` (missing period suffix)
+
+This ensures all branch implementations are compatible with shared Vercel environment variables.
 ```
 
 ### 0.4 Environment Configuration
 
-Create `.env.local`:
+**IMPORTANT: Port Assignment by LLM**
+
+Each LLM implementation runs on a dedicated port to allow simultaneous local testing:
+
+| LLM | Port | NEXTAUTH_URL |
+|-----|------|--------------|
+| **ChatGPT** | 3000 | `http://localhost:3000` |
+| **Gemini** | 3001 | `http://localhost:3001` |
+| **Claude** | 3002 | `http://localhost:3002` |
+
+Update your `package.json` scripts to use your assigned port:
+```json
+{
+  "scripts": {
+    "dev": "next dev -p YOUR_PORT",
+    "start": "next start -p YOUR_PORT"
+  }
+}
+```
+
+Create `.env.local` (using your assigned port):
 
 ```bash
+# Server Configuration
+PORT=YOUR_PORT  # 3000 for ChatGPT, 3001 for Gemini, 3002 for Claude
+
 # Database
 DATABASE_URL=postgresql://...
 
-# Auth
-NEXTAUTH_URL=http://localhost:3000
+# Auth (use your assigned port!)
+NEXTAUTH_URL=http://localhost:YOUR_PORT
 NEXTAUTH_SECRET=  # Generate with: openssl rand -base64 32
 
 # Google OAuth
@@ -222,9 +259,18 @@ ENCRYPTION_KEY=  # Generate with: openssl rand -hex 32
 STRIPE_SECRET_KEY=
 STRIPE_PUBLISHABLE_KEY=
 STRIPE_WEBHOOK_SECRET=
-STRIPE_PRICE_ID_STARTER=
-STRIPE_PRICE_ID_PRO=
-STRIPE_PRICE_ID_ENTERPRISE=
+
+# Stripe Price IDs (Monthly)
+STRIPE_PRICE_ID_STARTER_MONTHLY=
+STRIPE_PRICE_ID_PRO_MONTHLY=
+
+# Stripe Price IDs (Annual)
+STRIPE_PRICE_ID_STARTER_ANNUAL=
+STRIPE_PRICE_ID_PRO_ANNUAL=
+
+# Optional: Team tier
+STRIPE_PRICE_ID_TEAM_MONTHLY=
+STRIPE_PRICE_ID_TEAM_ANNUAL=
 
 # Email
 RESEND_API_KEY=
@@ -296,7 +342,7 @@ Before proceeding to Phase 1, verify all of the following. Write tests as you se
 
 **What to verify:**
 - Run `npm run dev`
-- Navigate to `http://localhost:3000`
+- Navigate to `http://localhost:YOUR_PORT` (3000/3001/3002 based on your LLM assignment)
 
 **Success criteria:**
 - No errors in terminal

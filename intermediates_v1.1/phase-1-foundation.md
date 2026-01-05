@@ -562,7 +562,7 @@ src/
 
 | Issue | Likely Cause | Solution |
 |-------|--------------|----------|
-| OAuth redirect mismatch | Callback URL not configured in Google Console | Add `http://localhost:3000/api/auth/callback/google` to authorized redirects |
+| OAuth redirect mismatch | Callback URL not configured in Google Console | Add `http://localhost:YOUR_PORT/api/auth/callback/google` to authorized redirects (all three ports: 3000, 3001, 3002) |
 | Token encryption fails | Missing `ENCRYPTION_KEY` env var | Generate 32-byte hex key: `openssl rand -hex 32` |
 | Calendar API 403 | Insufficient scopes | Ensure `calendar.readonly` scope is requested in OAuth config |
 | Events empty for date range | Calendar has no events | Use a test calendar with known events |

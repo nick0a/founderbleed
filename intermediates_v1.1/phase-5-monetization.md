@@ -21,13 +21,13 @@ Build the subscription system with Stripe integration, feature gating, and email
 | **Free** | $0 | None | - |
 | **Starter** | $20/seat/month | $3.00/month | Community |
 | **Pro** | $50/seat/month | $7.50/month | Email (48hr) |
-| **Enterprise** | $90/seat/month | $13.50/month | Email (8hr) |
+| **Team** | $90/seat/month | $13.50/month | Email (8hr) |
 
 ### Annual Discount
 2 months free (pay for 10, get 12):
 - Starter: $200/year
 - Pro: $500/year
-- Enterprise: $900/year
+- Team: $900/year
 
 ---
 
@@ -54,7 +54,7 @@ export const subscriptions = pgTable('subscriptions', {
   userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
   stripeCustomerId: text('stripe_customer_id'),
   stripeSubscriptionId: text('stripe_subscription_id'),
-  tier: text('tier'), // 'starter', 'pro', 'enterprise'
+  tier: text('tier'), // 'starter', 'pro', 'team'
   status: text('status'), // 'active', 'cancelled', 'past_due', 'trialing'
   currentPeriodStart: timestamp('current_period_start'),
   currentPeriodEnd: timestamp('current_period_end'),
@@ -115,6 +115,21 @@ export const reportAccessLog = pgTable('report_access_log', {
 
 ```typescript
 // POST /api/subscription/create-checkout
+
+// IMPORTANT: Use standardized env var names (see critical-rules.md #11)
+// Pattern: STRIPE_PRICE_ID_{TIER}_{PERIOD}
+const STRIPE_MONTHLY_PRICES: Record<string, string | undefined> = {
+  starter: process.env.STRIPE_PRICE_ID_STARTER_MONTHLY,
+  pro: process.env.STRIPE_PRICE_ID_PRO_MONTHLY,
+  team: process.env.STRIPE_PRICE_ID_TEAM_MONTHLY,
+};
+
+const STRIPE_ANNUAL_PRICES: Record<string, string | undefined> = {
+  starter: process.env.STRIPE_PRICE_ID_STARTER_ANNUAL,
+  pro: process.env.STRIPE_PRICE_ID_PRO_ANNUAL,
+  team: process.env.STRIPE_PRICE_ID_TEAM_ANNUAL,
+};
+
 export async function POST(request: NextRequest) {
   const session = await auth();
   const { tier, billingPeriod } = await request.json();
@@ -153,7 +168,7 @@ Handle these Stripe events:
 Create `src/lib/subscription.ts`:
 
 ```typescript
-export async function requireSubscription(userId: string, minTier?: 'starter' | 'pro' | 'enterprise') {
+export async function requireSubscription(userId: string, minTier?: 'starter' | 'pro' | 'team') {
   const subscription = await getActiveSubscription(userId);
 
   if (!subscription || subscription.status !== 'active') {
@@ -161,7 +176,7 @@ export async function requireSubscription(userId: string, minTier?: 'starter' | 
   }
 
   if (minTier) {
-    const tierOrder = { starter: 1, pro: 2, enterprise: 3 };
+    const tierOrder = { starter: 1, pro: 2, team: 3 };
     if (tierOrder[subscription.tier] < tierOrder[minTier]) {
       return { allowed: false, reason: 'upgrade_required' };
     }
