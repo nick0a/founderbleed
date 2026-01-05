@@ -1,0 +1,17 @@
+# <type>: <subject> (max 50 chars)
+# |<----  Using a Maximum Of 50 Characters  ---->|
+
+# Type must be one of:
+#   feat:     A new feature
+#   fix:      A bug fix
+#   docs:     Documentation only
+#   style:    Formatting, no code change
+#   refactor: Code change, no new feature or bug fix
+#   test:     Adding tests
+#   chore:    Build process or auxiliary tool changes
+
+# Body (optional): Explain *what* and *why* (not *how*)
+# |<----   Try To Limit Each Line to a Maximum Of 72 Characters   ---->|
+
+# Footer (optional): Reference issues, breaking changes
+# Example: Closes #123, BREAKING CHANGE: description
