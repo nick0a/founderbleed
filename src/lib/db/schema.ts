@@ -229,13 +229,67 @@ export const subscriptions = pgTable('subscriptions', {
     .references(() => users.id, { onDelete: 'cascade' }),
   stripeCustomerId: text('stripe_customer_id'),
   stripeSubscriptionId: text('stripe_subscription_id'),
-  plan: text('plan').default('free'), // free, starter, team, pro
+  plan: text('plan').default('free'), // free, starter, pro, enterprise
   status: text('status').default('active'), // active, canceled, past_due, trialing
   currentPeriodStart: timestamp('current_period_start'),
   currentPeriodEnd: timestamp('current_period_end'),
   cancelAtPeriodEnd: boolean('cancel_at_period_end').default(false),
+  llmBudgetCents: integer('llm_budget_cents'), // monthly LLM budget
+  llmSpentCents: integer('llm_spent_cents').default(0),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
+  cancelledAt: timestamp('cancelled_at'),
+});
+
+// ============================================
+// BYOK Keys (Bring Your Own Key)
+// ============================================
+
+export const byokKeys = pgTable('byok_keys', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  provider: text('provider').notNull(), // 'openai', 'anthropic', 'google'
+  apiKeyEncrypted: text('api_key_encrypted').notNull(),
+  priority: text('priority').default('budget_first'), // 'byok_first', 'budget_first', 'byok_premium_only'
+  isValid: boolean('is_valid').default(true),
+  lastValidatedAt: timestamp('last_validated_at'),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// ============================================
+// Shared Reports (email-gated)
+// ============================================
+
+export const sharedReports = pgTable('shared_reports', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  auditId: uuid('audit_id')
+    .notNull()
+    .references(() => audits.id, { onDelete: 'cascade' }),
+  shareToken: text('share_token').unique().notNull(),
+  ownerUserId: uuid('owner_user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').defaultNow(),
+  expiresAt: timestamp('expires_at'), // 30 days from creation
+  revokedAt: timestamp('revoked_at'),
+});
+
+// ============================================
+// Report Access Log (lead capture)
+// ============================================
+
+export const reportAccessLog = pgTable('report_access_log', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  sharedReportId: uuid('shared_report_id')
+    .notNull()
+    .references(() => sharedReports.id, { onDelete: 'cascade' }),
+  viewerEmail: text('viewer_email').notNull(),
+  emailVerified: boolean('email_verified').default(false),
+  verificationToken: text('verification_token'),
+  accessedAt: timestamp('accessed_at').defaultNow(),
+  convertedToSignup: boolean('converted_to_signup').default(false),
 });
 
 // ============================================
