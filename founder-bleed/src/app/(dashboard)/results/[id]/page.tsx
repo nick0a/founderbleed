@@ -467,7 +467,7 @@ export default function ResultsPage() {
   const { audit, events, roleRecommendations } = data;
   const metrics = audit.computedMetrics;
   const hasSalary = data.user?.salaryAnnual && parseFloat(data.user.salaryAnnual) > 0;
-  const heroMetric = hasSalary && metrics?.arbitrageAnnual 
+  const heroMetric = hasSalary && metrics?.arbitrageAnnual && metrics.arbitrageAnnual > 0
     ? `$${Math.round(metrics.arbitrageAnnual).toLocaleString()}`
     : null;
   const shareUrl = typeof window !== 'undefined' 
@@ -543,9 +543,23 @@ export default function ResultsPage() {
         {/* Hero Metric */}
         <div className="bg-gradient-to-r from-destructive/10 to-destructive/5 border border-destructive/20 rounded-lg p-6">
           {heroMetric ? (
-            <h1 className="text-3xl md:text-4xl font-bold text-destructive">
-              {username}, You&apos;re Losing {heroMetric} Every Year...
-            </h1>
+            <>
+              <h1 className="text-3xl md:text-4xl font-bold text-destructive">
+                {username}, You&apos;re Losing {heroMetric} Every Year...
+              </h1>
+              <p className="text-muted-foreground mt-2">
+                on work that should be delegated to your team
+              </p>
+            </>
+          ) : hasSalary ? (
+            <>
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+                {username}, You Have {metrics?.reclaimableHoursPerWeek?.toFixed(1) || '0'} Hours/Week to Reclaim
+              </h1>
+              <p className="text-muted-foreground mt-2">
+                {metrics?.delegableHours?.toFixed(1) || '0'} hours of delegable work identified
+              </p>
+            </>
           ) : (
             <div className="space-y-2">
               <h1 className="text-2xl font-semibold text-muted-foreground">
@@ -557,11 +571,11 @@ export default function ResultsPage() {
                   Set Compensation
                 </Button>
               </Link>
+              <p className="text-muted-foreground mt-2">
+                on work that should be delegated to your team
+              </p>
             </div>
           )}
-          <p className="text-muted-foreground mt-2">
-            on work that should be delegated to your team
-          </p>
         </div>
       </div>
 
