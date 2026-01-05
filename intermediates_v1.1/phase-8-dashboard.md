@@ -78,6 +78,12 @@ Each action:
 - "Unlock automated audits and AI planning"
 - Subscribe CTA
 
+#### 9. All time Top Scores Modal
+- Your highest ever scores for:
+- Time spent on Unique Tasks: "[HH:MM score]" 
+- Efficiency: "[% score]"
+- Planning: "[% score]"
+
 ---
 
 ## Comparison View
@@ -348,6 +354,49 @@ export async function GET(request: NextRequest) {
 | Notifications work | Bell, list, mark as read |
 
 **Do not proceed to Phase 9 until all tests pass.**
+
+---
+
+## User Review & Verification
+
+**⏸️ STOP: User review required before proceeding to the next phase.**
+
+The agent has completed this phase. Before continuing, please verify the build yourself.
+
+### Manual Testing Checklist
+
+| # | Test | Steps | Expected Result |
+|---|------|-------|-----------------|
+| 1 | Subscriber sees dashboard | Sign in as subscriber | Lands on `/dashboard` with metrics and actions |
+| 2 | Free user sees results | Sign in as free user with audit | Lands on `/results/[auditId]`, not dashboard |
+| 3 | Efficiency trend | View hero stat with 2+ audits | Shows score with ↑ or ↓ arrow and percentage change |
+| 4 | Top 3 Actions | Check actions panel | 1-3 relevant action cards with impact metrics |
+| 5 | This Week Preview | Check mini calendar | Current week events shown, color-coded by tier |
+| 6 | Comparison view | Select "This week vs last week" | Both periods shown with green/red deltas |
+| 7 | Automated audit setup | Go to settings, enable weekly audit | Schedule saves, next run date shown |
+| 8 | Notification bell | After audit completes, check bell icon | Shows unread count, click shows notification list |
+
+### What to Look For
+
+- Dashboard loads quickly with meaningful data
+- Trends calculated correctly (positive = green, negative = red)
+- Actions are specific to your situation
+- Automated audits respect timezone settings
+
+### Known Limitations at This Stage
+
+- Automated audits need cron job configured
+- Contacts/leaderboard not yet implemented
+
+### Proceed to Next Phase
+
+Once you've verified the above, instruct the agent:
+
+> "All Phase 8 tests pass. Proceed to Phase 9: Settings & Contacts."
+
+If issues were found:
+
+> "Phase 8 issue: [describe problem]. Please fix before proceeding."
 
 ---
 

@@ -61,28 +61,64 @@ Interactive 3-step carousel:
 - Navigation dots
 - Auto-advance optional (pause on hover)
 
-### Delegation Pyramid
-Visual pyramid showing 5 tiers:
+### Delegation Chart
+Dual-axis chart combining salary (bars) and available flex time (exponential line).
 
+**Implementation note:** The following two charts should be combined into a single dual-axis chart. They are shown separately here due to ASCII limitations.
+
+#### Chart 1: Annual Salary (Bar Chart)
 ```
-         ┌─────┐
-         │Unique│ ← Narrowest (highest cost, smallest talent pool)
-        ┌┴─────┴┐
-        │Founder│
-       ┌┴───────┴┐
-       │ Senior  │
-      ┌┴─────────┴┐
-      │  Junior   │
-     ┌┴───────────┴┐
-     │     EA      │ ← Widest (lowest cost, largest talent pool)
-     └─────────────┘
+Salary ($)
+         │
+    250k │ ████████
+         │ ████████
+         │ ████████
+    150k │ ████████  ██████
+         │ ████████  ██████
+     75k │ ████████  ██████  ████
+         │ ████████  ██████  ████
+     25k │ ████████  ██████  ████  ██
+         │ ████████  ██████  ████  ██
+       0 └─────────────────────────────────
+           Founder   Senior  Junior   EA
 ```
 
-- Y-axis: Hourly cost ($25 to $250+)
-- X-axis: Available talent pool
-- Color-coded by tier
-- Hover states with tier descriptions
-- Tooltips explaining each tier
+#### Chart 2: Available Flex Time (Exponential Line)
+```
+Flex (%)
+         │
+     30% │                            ●
+         │                          ╱
+         │                        ╱
+     18% │                    ●
+         │                  ╱
+         │               ╱
+     10% │           ●
+         │         ╱
+         │      ╱
+      2% │  ●
+         │
+       0 └─────────────────────────────────
+           Founder   Senior  Junior   EA
+```
+
+#### Data Table
+| Role | Annual Salary | Available Flex |
+|------|---------------|----------------|
+| Founder | $250,000 | 2% |
+| Senior | $150,000 | 10% |
+| Junior | $75,000 | 18% |
+| EA | $25,000 | 30% |
+
+**Key insight:** Founders cost the most but have almost no scheduling flexibility (~2% of their calendar). Lower-cost roles like EAs often have significant unused capacity (~30%) because delegation isn't happening systematically.
+
+#### Combined Chart Specifications
+- **Left Y-axis:** Annual salary ($0 to $250,000)
+- **Right Y-axis:** Available flex time (0% to 35%)
+- **X-axis:** Roles from Founder to EA
+- **Bars:** Color-coded by role (use tier colors from brand palette)
+- **Line:** Exponential curve connecting the flex data points
+- **Interactivity:** Hover states show exact values for each role with tooltips explaining the delegation opportunity
 
 ### Sample Report Preview
 - Screenshot or interactive demo
@@ -129,7 +165,7 @@ Breakpoint: 375px minimum
 - No horizontal scrolling
 - CTA remains tappable (44x44px minimum touch target)
 - Carousel works on touch
-- Pyramid scales down appropriately
+- Chart scales down appropriately
 - Tables horizontally scrollable if needed
 
 ---
@@ -169,7 +205,7 @@ Create `src/app/page.tsx`:
 Key sections:
 - Hero with CTA
 - How It Works carousel
-- Delegation pyramid
+- Delegation chart
 - Sample report preview
 - Privacy section
 - Final CTA
@@ -185,14 +221,18 @@ Create `src/components/how-it-works-carousel.tsx`:
 // Auto-advance with pause on hover
 ```
 
-### 6.4 Pyramid Component
+### 6.4 Delegation Chart Component
 
-Create `src/components/delegation-pyramid.tsx`:
+Create `src/components/delegation-chart.tsx`:
 
 ```typescript
-// 5 horizontal bars
-// Color-coded by tier
-// Hover states with tooltips
+// Dual-axis chart with bars (salary) and line (flex time)
+// Left Y-axis: Annual salary ($0 to $250k)
+// Right Y-axis: Available flex time (0% to 35%)
+// X-axis: Founder, Senior, Junior, EA
+// Bars: Color-coded by role, decreasing height left to right
+// Line: Exponential curve increasing left to right
+// Hover states with tooltips showing exact values
 // Responsive scaling
 ```
 
@@ -245,16 +285,17 @@ Create `src/components/delegation-pyramid.tsx`:
 - Dots work
 - Can navigate back and forth
 
-### LANDING-05: Pyramid Shows 5 Tiers
+### LANDING-05: Delegation Chart Displays Correctly
 
 **What to verify:**
-- Find delegation pyramid
+- Find delegation chart
 
 **Success criteria:**
-- All 5 tiers visible: Unique, Founder, Senior, Junior, EA
-- Pyramid shape (narrow at top)
-- Each tier has distinct color
-- Labels readable
+- All 4 roles visible: Founder, Senior, Junior, EA
+- Bars show decreasing salary left to right
+- Line shows exponential increase in flex time left to right
+- Both axes labeled correctly
+- Hover states show values
 
 ### LANDING-06: Dark Mode Works
 
@@ -289,7 +330,7 @@ Create `src/components/delegation-pyramid.tsx`:
 - Content accessible
 - CTA tappable (44x44px)
 - Carousel works on touch
-- Pyramid scales
+- Chart scales
 
 ### LANDING-09: CTA Initiates OAuth
 
@@ -301,6 +342,25 @@ Create `src/components/delegation-pyramid.tsx`:
 - Correct scopes requested (calendar.readonly)
 - After consent, returns to app
 
+### LANDING-10: Sample Report Data Review
+
+**What to verify:**
+- Review the sample report preview section
+- Check all displayed metrics and data
+
+**Success criteria:**
+- Hero metric shows realistic value (e.g., "$127,000/year in recoverable time")
+- Time breakdown percentages are believable (should total ~100%)
+- Role recommendations match typical founder patterns:
+  - Founder-only work: 15-25%
+  - Delegatable to Senior: 20-30%
+  - Delegatable to Junior: 25-35%
+  - Delegatable to EA: 15-25%
+- Planning Score displayed (0-100 scale)
+- Meeting categories reflect real calendar items (1:1s, team meetings, external calls, focus time, admin)
+- Numbers don't look placeholder-ish (avoid round numbers like 10%, 20%, 30%)
+- Data tells a compelling story about delegation opportunity
+
 ---
 
 ## Handoff Requirements
@@ -311,13 +371,59 @@ Create `src/components/delegation-pyramid.tsx`:
 | Logo has gradient | Blood drop with red gradient |
 | CTA correct | "TRIAGE YOUR TIME" centered |
 | Carousel works | All 3 steps navigable |
-| Pyramid shows 5 tiers | All visible with colors |
+| Delegation chart works | Bars + line with 4 roles |
 | Dark mode works | Toggle switches, persists |
 | Privacy note present | Read-only messaging |
 | Mobile responsive | No scroll at 375px |
 | CTA initiates OAuth | Starts sign-in flow |
+| Sample report realistic | Data looks like real audit results |
 
 **Do not proceed to Phase 7 until all tests pass.**
+
+---
+
+## User Review & Verification
+
+**⏸️ STOP: User review required before proceeding to the next phase.**
+
+The agent has completed this phase. Before continuing, please verify the build yourself.
+
+### Manual Testing Checklist
+
+| # | Test | Steps | Expected Result |
+|---|------|-------|-----------------|
+| 1 | Landing page loads | Navigate to `/` | Page renders with hero, carousel, chart, and CTAs |
+| 2 | Blood drop logo | Look at the header logo | Red gradient blood drop shape (#DC2626 to #991B1B) |
+| 3 | CTA text correct | Check the main button | Says "TRIAGE YOUR TIME" (all caps, centered) |
+| 4 | Carousel works | Click arrows or dots in "How It Works" | Shows Triage → Delegate → Plan steps |
+| 5 | Delegation chart works | Look at the delegation chart | Bars (salary) + exponential line (flex) with 4 roles |
+| 6 | Dark mode toggle | Click theme toggle | All sections switch to dark mode correctly |
+| 7 | CTA starts OAuth | Click "TRIAGE YOUR TIME" | Redirects to Google sign-in |
+| 8 | Mobile responsive | Resize browser to 375px wide | No horizontal scrolling, content accessible |
+| 9 | Sample report realistic | Review sample report preview | Data shows realistic metrics (non-round percentages, believable hero metric, proper role breakdown) |
+
+### What to Look For
+
+- Professional, polished appearance
+- Privacy messaging visible ("Read-only access")
+- Logo gradient visible on both light and dark backgrounds
+- Touch-friendly on mobile (44x44px minimum tap targets)
+- Sample report data looks authentic (not placeholder values)
+
+### Known Limitations at This Stage
+
+- Planning Assistant paywall shown but not fully tested until Phase 7
+- Dashboard comparison not yet implemented
+
+### Proceed to Next Phase
+
+Once you've verified the above, instruct the agent:
+
+> "All Phase 6 tests pass. Proceed to Phase 7: Planning Assistant."
+
+If issues were found:
+
+> "Phase 6 issue: [describe problem]. Please fix before proceeding."
 
 ---
 

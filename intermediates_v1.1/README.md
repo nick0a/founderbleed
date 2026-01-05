@@ -130,6 +130,31 @@ These rules must NEVER be violated:
 | Payments | Stripe |
 | AI | OpenAI / Anthropic / Google |
 | Email | Resend |
+| Currency | Twelve Data API |
+
+---
+
+## Integration Reference Documents
+
+Detailed implementation guides for external service integrations:
+
+| Document | Service | Used In Phases |
+|----------|---------|----------------|
+| [integration-resend.md](./integration-resend.md) | Email (Resend) | 3, 5, 9 |
+| [integration-openai.md](./integration-openai.md) | AI/LLM (OpenAI + Vercel AI SDK) | 7, 9 |
+| [integration-twelve-data.md](./integration-twelve-data.md) | Currency Exchange (Twelve Data) | 4, 9 |
+
+**When to reference these documents:**
+- Before implementing email functionality → Read `integration-resend.md`
+- Before implementing Planning Assistant → Read `integration-openai.md`
+- Before implementing currency conversion → Read `integration-twelve-data.md`
+
+Each document contains:
+- Installation instructions
+- SDK initialization code
+- Complete API reference
+- Error handling patterns
+- Source URLs for official documentation
 
 ---
 

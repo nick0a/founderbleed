@@ -15,6 +15,21 @@ Build the AI-powered Planning Assistant that helps users improve their calendar 
 
 ---
 
+## Integration References
+
+**CRITICAL:** Before implementing the AI chat features in this phase, review:
+
+- **[integration-openai.md](./integration-openai.md)** - Complete OpenAI/Vercel AI SDK integration guide including:
+  - Vercel AI SDK setup with `streamText` for Next.js App Router
+  - Model selection (GPT-4o, GPT-4o-mini)
+  - Streaming route handler implementation
+  - Frontend `useChat` hook component
+  - Token usage tracking for LLM budget
+  - BYOK (Bring Your Own Key) support
+  - Error handling patterns
+
+---
+
 ## Feature Gating
 
 | User Type | Access |
@@ -58,12 +73,16 @@ User's Audit Data:
 - Hours by tier: Unique: ${unique}h, Founder: ${founder}h, Senior: ${senior}h, Junior: ${junior}h, EA: ${ea}h
 - Top delegable tasks: ${topDelegableTasks.join(', ')}
 
+If they do not mention it in their message, you should query whether they are planning their day, week or month and focus on that timeframe.
+
 When suggesting calendar changes:
 - Be specific with times and durations
 - Explain why each change helps
 - Consider their role (mostly Unique/Founder work vs delegable)
 - Suggest protecting time for high-value work
-- Recommend delegating low-value tasks
+- Recommend delegating low-value tasks to other team members, 
+- be specific about who they should delegate to and what they should delegate
+
 
 You can suggest new events to add to their calendar.
 Format event suggestions as structured data:
@@ -347,6 +366,49 @@ AI: Great. Here's my suggested time blocking:
 | Add all works | Bulk creation functional |
 
 **Do not proceed to Phase 8 until all tests pass.**
+
+---
+
+## User Review & Verification
+
+**⏸️ STOP: User review required before proceeding to the next phase.**
+
+The agent has completed this phase. Before continuing, please verify the build yourself.
+
+### Manual Testing Checklist
+
+| # | Test | Steps | Expected Result |
+|---|------|-------|-----------------|
+| 1 | Free user blocked | As free user, navigate to Planning | Paywall modal appears, cannot access chat |
+| 2 | Subscriber sees chat | As subscriber, navigate to Planning | Chat interface loads, can send messages |
+| 3 | AI responds | Send message: "Help me plan my week" | AI response appears within 3 seconds |
+| 4 | Context awareness | Ask: "What's my efficiency score?" | AI knows your actual score from audit data |
+| 5 | Calendar view | Check the calendar week grid | Events displayed and color-coded by tier |
+| 6 | Planning scores on events | Look at events in calendar | Each has green/amber/red score badge |
+| 7 | Event suggestion | Ask AI to "Schedule a focus block tomorrow at 9am" | Event card appears with "Add to Calendar" button |
+| 8 | Add to calendar | Click "Add to Calendar" on suggestion | Event created in your Google Calendar (requires write scope) |
+
+### What to Look For
+
+- AI provides relevant, contextual advice
+- Calendar shows your actual events from Google
+- Event suggestions are specific (title, time, duration)
+- Scope upgrade prompt appears if write access needed
+
+### Known Limitations at This Stage
+
+- AI quality depends on LLM budget/BYOK configuration
+- Write scope requires re-authorization
+
+### Proceed to Next Phase
+
+Once you've verified the above, instruct the agent:
+
+> "All Phase 7 tests pass. Proceed to Phase 8: Dashboard & Automation."
+
+If issues were found:
+
+> "Phase 7 issue: [describe problem]. Please fix before proceeding."
 
 ---
 

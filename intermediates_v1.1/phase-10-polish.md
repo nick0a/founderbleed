@@ -30,6 +30,7 @@ These must ALL be verified across the entire app:
 | 8 | **Engineering left, Business right** | Team composition layout |
 | 9 | **QA Engineer included** | In engineering column |
 | 10 | **Algorithm version 1.7** | All audit runs tagged |
+| 11 | **Header/nav uniform across all screens** | Verify header appears on all pages with: logo linking to `/`, nav links to relevant pages (Dashboard, Settings), "Run Audit" CTA, "Subscribe" CTA for free tier users. Free tier users see gated features as disabled/locked. Subscribers see full nav without upgrade prompts. |
 
 ---
 
@@ -182,7 +183,7 @@ Execute every item sequentially:
 [ ] 11. Select 1-year date range - shows "365 days"
 [ ] 12. Continue button disabled until Q&A + processing complete
 [ ] 13. Triage page shows reconcile buttons (NOT checkboxes)
-[ ] 14. Triage shows correct tiers (4 for solo, 5 for team)
+[ ] 14. Triage shows correct tiers (4 for solo, 5 for team, Engineering, Business, Universal verticals)
 [ ] 15. First-time users see tier explanation modal
 [ ] 16. Results page shows editable username field
 [ ] 17. Results page shows Planning Score as percentage ("X%")
@@ -333,6 +334,24 @@ Execute every item sequentially:
 - Page loads < 5 seconds
 - No browser freeze
 
+### FINAL-13: Header/Navigation Consistency
+
+**What to verify:**
+- Visit every page in the app (landing, processing, triage, results, dashboard, settings, planning assistant, shared report)
+- Check header appears and is consistent
+- Test as both free user and subscriber
+
+**Success criteria:**
+- Header appears on all authenticated pages
+- Logo links to `/` (landing page)
+- Nav links present: Dashboard, Settings
+- "Run Audit" CTA visible and functional
+- Free tier users see "Subscribe" CTA in header
+- Subscribers do not see upgrade prompts in header
+- Free tier users see locked/disabled states on gated features (e.g., Planning Assistant)
+- Header styling consistent across light/dark mode
+- Header responsive on mobile (hamburger menu or collapsed nav)
+
 ---
 
 ## Deployment Checklist
@@ -384,6 +403,51 @@ Phase 10 (and entire build) is complete when ALL are true:
 | Lint passes | npm run lint |
 | API performance met | Time endpoints |
 | Large data handled | 1000+ events |
+| Header/nav consistent | Uniform on all pages, CTAs correct per tier |
+
+---
+
+## User Review & Verification
+
+**⏸️ STOP: Final user review required before deployment.**
+
+The agent has completed all phases. Before deploying, please verify the complete build yourself.
+
+### Final Manual Testing Checklist
+
+| # | Test | Steps | Expected Result |
+|---|------|-------|-----------------|
+| 1 | Complete new user journey | Start from `/`, complete OAuth, audit, view results | Full flow works without errors |
+| 2 | No NaN anywhere | Navigate through all pages, search for "NaN" | Zero instances of NaN visible |
+| 3 | Solo founder = 4 tiers | Set team to 1 founder, check all tier dropdowns | Only Unique, Senior, Junior, EA (no Founder) |
+| 4 | Dark mode complete | Toggle dark mode, visit every page | All pages render correctly, no white flashes |
+| 5 | Mobile responsive | Set viewport to 375px, test all pages | No horizontal scrolling, touch targets adequate |
+| 6 | Share flow complete | Generate share link, open incognito, complete flow | Email required → report visible → CTA goes to `/` |
+| 7 | Planning Score % | Check everywhere Planning Score appears | Always shows "X%" format (never bare number) |
+| 8 | Build succeeds | Run `npm run build` | Completes without errors |
+| 9 | Lint passes | Run `npm run lint` | No errors |
+| 10 | Header/nav consistent | Visit all pages as free user and subscriber | Uniform header with logo → `/`, nav links, "Run Audit" CTA, "Subscribe" for free tier, gated features locked |
+
+### Critical Invariants to Verify
+
+- [ ] No NaN anywhere in the application
+- [ ] Solo founder sees only 4 tiers
+- [ ] Planning Score always shows % symbol
+- [ ] Drag-drop only appears with 2+ roles
+- [ ] Share links go to landing page, not Stripe
+- [ ] Engineering left, Business right in team composition
+- [ ] QA Engineer in engineering column
+- [ ] Header/nav uniform across all screens with correct CTAs per user tier
+
+### Ready for Deployment
+
+Once all tests pass, the MVP is ready! Instruct the agent:
+
+> "All Phase 10 tests pass. MVP is complete and ready for deployment."
+
+If issues remain:
+
+> "Phase 10 issue: [describe problem]. Please fix before deployment."
 
 ---
 

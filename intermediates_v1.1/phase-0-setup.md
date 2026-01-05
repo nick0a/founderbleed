@@ -22,15 +22,41 @@ Initialize the project, configure the development environment, and establish the
 
 Before building, understand these core concepts:
 
-### The 5-Tier Classification Model
+### The Classification Model
+
+Work is classified along two dimensions: **Hierarchy** (level of seniority/value) and **Discipline** (area of expertise).
+
+#### Hierarchy Tiers
 
 | Tier | Description | Default Rate | Who Does This Work |
 |------|-------------|--------------|-------------------|
 | **Unique** | Only this founder can do it (strategic vision, key relationships) | Founder's compensation | Only you |
 | **Founder** | High-value work a co-founder could handle | Founder's compensation | A co-founder |
-| **Senior** | Skilled specialist work (Engineering or Business) | $100,000/year | Senior hire |
+| **Senior** | Skilled specialist work | $100,000/year | Senior hire |
 | **Junior** | Entry-level specialist work | $50,000/year | Junior hire |
 | **EA** | Executive Assistant / administrative | $30,000/year | EA |
+
+#### Vertical
+
+| Vertical | Description | Examples |
+|------------|-------------|----------|
+| **Universal** | Bridges both engineering and business domains; generalist work | Cross-functional leadership, general operations, strategy execution |
+| **Technical** | Engineering and technical work | Development, architecture, DevOps, QA, data engineering |
+| **Business** | Business operations and growth work | Sales, marketing, finance, HR, customer success, legal |
+
+> **Note:** Delegation requires matching both hierarchy and vertical. Rates may vary by vertical within the same tier (e.g., Senior Engineering at $120k vs Senior Business at $80k and Senior Universal at 150K).
+
+#### Tier × Vertical Matrix
+
+| Tier | Universal | Engineering | Business |
+|------|-----------|-----------|----------|
+| **Unique** | ✓ | ✓ | ✓ |
+| **Founder** | ✓ | ✓ | ✓ |
+| **Senior** | ✓ | ✓ | ✓ |
+| **Junior** | ✓ | ✓ | ✓ |
+| **EA** | ✓ | — | — |
+
+> **Note:** EA/Assistant roles are inherently universal—they provide cross-functional support rather than specializing in technical or business domains.
 
 **Solo Founder Rule:** If team has only 1 founder, hide "Founder" tier entirely. Events that would be "Founder" become "Unique".
 
@@ -46,7 +72,7 @@ Before building, understand these core concepts:
 
 ### Hero Metric
 
-The primary display is: **"{Username}, You're Losing $X Every Year..."**
+The primary display is: **"You're Losing $X Every Year..."**
 
 ---
 
@@ -76,9 +102,10 @@ The primary display is: **"{Username}, You're Losing $X Every Year..."**
 Before writing ANY code, understand:
 
 1. **Core Product Loop**: TRIAGE → DELEGATE → PLAN (users audit, get hiring recs, plan better, repeat)
-2. **5-Tier Model**: Unique, Founder, Senior, Junior, EA
+2. **5-Tier Model**: Unique, Founder, Senior, Junior, EA 
+3. **3-Vertical Discipline Model**: - Universal, Engineering & Business
 3. **Solo Founder Exception**: Hide Founder tier when team_composition.founder === 1
-4. **Hero Metric**: Frame as loss, not savings ("{Username}, You're Losing $X...")
+4. **Hero Metric**: Frame as loss, not savings ("You're Losing $X...")
 5. **Planning Score**: Always display as percentage ("42%" not "42")
 
 ### 0.2 Initialize Project
@@ -125,7 +152,7 @@ Create the following structure:
 ```markdown
 # Founder Bleed
 
-A web app that helps founders reclaim time by analyzing their calendar, classifying work by delegation tier, and generating hiring recommendations.
+A web app that helps founders reclaim time by analyzing their calendar, classifying work by delegation & discipline, delegating work to team members, generating hiring recommendations and planning their time more effectively.
 
 ## Tech Stack
 - Next.js 14+ (App Router), TypeScript, Tailwind CSS, shadcn/ui
@@ -222,9 +249,12 @@ ENCRYPTION_KEY=  # Generate with: openssl rand -hex 32
 STRIPE_SECRET_KEY=
 STRIPE_PUBLISHABLE_KEY=
 STRIPE_WEBHOOK_SECRET=
-STRIPE_PRICE_ID_STARTER=
-STRIPE_PRICE_ID_PRO=
-STRIPE_PRICE_ID_ENTERPRISE=
+STRIPE_PRICE_ID_STARTER_MONTHLY=
+STRIPE_PRICE_ID_STARTER_ANNUAL=
+STRIPE_PRICE_ID_PRO_MONTHLY=
+STRIPE_PRICE_ID_PRO_ANNUAL=
+STRIPE_PRICE_ID_ENTERPRISE_MONTHLY=
+STRIPE_PRICE_ID_ENTERPRISE_ANNUAL=
 
 # Email
 RESEND_API_KEY=
@@ -288,7 +318,7 @@ src/
 
 ## Test Instructions
 
-Before proceeding to Phase 1, verify all of the following. Write tests as you see fit (unit tests, integration tests, or manual verification). Each test must pass.
+Before proceeding to Phase 1, you must test all of the following. Write tests as you see fit (unit tests, integration tests, or manual verification). Each test must pass.
 
 **Retry Policy:** If a test fails, fix the issue and retry. After 5 failed attempts on the same test, stop and ask the user for guidance.
 
@@ -373,6 +403,45 @@ Phase 0 is complete when ALL of the following are true:
 | Dark mode works | Theme toggle switches correctly |
 
 **Do not proceed to Phase 1 until all tests pass and all handoff requirements are met.**
+
+---
+
+## User Review & Verification
+
+**⏸️ STOP: User review required before proceeding to the next phase.**
+
+The agent has completed this phase. Before continuing, please verify the build yourself.
+
+### Manual Testing Checklist
+
+| # | Test | Steps | Expected Result |
+|---|------|-------|-----------------|
+| 1 | App starts | Run `npm run dev`, open http://localhost:3000 | Page loads without errors |
+| 2 | Dark mode toggle | Click the theme toggle in the header | Background switches between light/dark, no flash on reload |
+| 3 | Button renders | Look for a shadcn Button component on the page | Styled button visible with Tailwind CSS |
+| 4 | Memory files exist | Check `.claude/` directory | CLAUDE.md and rules/ folder with critical-rules.md present |
+
+### What to Look For
+
+- No console errors in browser DevTools
+- Theme preference persists after page refresh
+- Clean, styled UI components (not unstyled HTML)
+
+### Known Limitations at This Stage
+
+- No authentication yet (coming in Phase 1)
+- No database tables created yet
+- Landing page is placeholder only
+
+### Proceed to Next Phase
+
+Once you've verified the above, instruct the agent:
+
+> "All Phase 0 tests pass. Proceed to Phase 1: Foundation."
+
+If issues were found:
+
+> "Phase 0 issue: [describe problem]. Please fix before proceeding."
 
 ---
 

@@ -24,8 +24,8 @@ Create the core tables in `src/lib/db/schema.ts`:
 ```typescript
 import { pgTable, uuid, text, timestamp, numeric, boolean, jsonb, integer } from 'drizzle-orm/pg-core';
 
-// Users table
-export const users = pgTable('users', {
+// Users table (Singular table name 'user' required by NextAuth adapter default)
+export const users = pgTable('user', {
   id: uuid('id').primaryKey().defaultRandom(),
   email: text('email').unique().notNull(),
   name: text('name'),
@@ -42,10 +42,10 @@ export const users = pgTable('users', {
 
   // Tier rates (annual)
   seniorEngineeringRate: numeric('senior_engineering_rate').default('100000'),
-  seniorBusinessRate: numeric('senior_business_rate').default('100000'),
-  juniorEngineeringRate: numeric('junior_engineering_rate').default('50000'),
+  seniorBusinessRate: numeric('senior_business_rate').default('800000'),
+  juniorEngineeringRate: numeric('junior_engineering_rate').default('40000'),
   juniorBusinessRate: numeric('junior_business_rate').default('50000'),
-  eaRate: numeric('ea_rate').default('30000'),
+  eaRate: numeric('ea_rate').default('25000'),
 
   // Settings
   settings: jsonb('settings').default({
@@ -70,7 +70,7 @@ export const users = pgTable('users', {
 });
 
 // Calendar connections
-export const calendarConnections = pgTable('calendar_connections', {
+export const calendarConnections = pgTable('calendar_connection', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
   provider: text('provider').default('google'),
@@ -381,7 +381,33 @@ export async function GET(request: NextRequest) {
 }
 ```
 
-### 1.6 Protected Route Wrapper
+### 1.6 Global Header & Layout
+
+Create `src/components/layout/header.tsx`:
+
+```typescript
+import { UserNav } from "@/components/layout/user-nav"
+import { MainNav } from "@/components/layout/main-nav"
+import { ThemeToggle } from "@/components/theme-toggle"
+
+export function Header() {
+  return (
+    <header className="border-b">
+      <div className="flex h-16 items-center px-4">
+        <MainNav className="mx-6" />
+        <div className="ml-auto flex items-center space-x-4">
+          <ThemeToggle />
+          <UserNav /> 
+        </div>
+      </div>
+    </header>
+  )
+}
+```
+
+**Note:** `UserNav` should include the user greeting/avatar. `MainNav` contains links to Dashboard, Results, Planning, Settings.
+
+### 1.7 Protected Route Wrapper
 
 Create `src/components/providers/session-provider.tsx`:
 
@@ -560,6 +586,47 @@ Phase 1 is complete when ALL of the following are true:
 | Token refresh works | Expired tokens auto-refresh |
 
 **Do not proceed to Phase 2 until all tests pass and all handoff requirements are met.**
+
+---
+
+## User Review & Verification
+
+**⏸️ STOP: User review required before proceeding to the next phase.**
+
+The agent has completed this phase. Before continuing, please verify the build yourself.
+
+### Manual Testing Checklist
+
+| # | Test | Steps | Expected Result |
+|---|------|-------|-----------------|
+| 1 | Sign in with Google | Click "Sign in with Google" on the sign-in page | Redirects to Google, then back to app with session active |
+| 2 | Session persists | After signing in, refresh the page | You remain signed in, user name/email visible |
+| 3 | Calendar list works | After signing in, check if calendars load (or test `/api/calendar/list`) | Returns your Google Calendar list |
+| 4 | Protected routes | Try accessing `/dashboard` without signing in | Redirects to sign-in page |
+| 5 | Database has user | Check your Neon database `user` table | Your email appears in the users table |
+
+### What to Look For
+
+- OAuth flow completes without errors
+- No "unauthorized" errors when authenticated
+- Google consent screen shows "Read-only calendar access"
+- User record created in database with encrypted tokens
+
+### Known Limitations at This Stage
+
+- No audit functionality yet (coming in Phase 2)
+- No triage or results pages
+- Calendar events are fetched but not processed
+
+### Proceed to Next Phase
+
+Once you've verified the above, instruct the agent:
+
+> "All Phase 1 tests pass. Proceed to Phase 2: Audit Engine."
+
+If issues were found:
+
+> "Phase 1 issue: [describe problem]. Please fix before proceeding."
 
 ---
 

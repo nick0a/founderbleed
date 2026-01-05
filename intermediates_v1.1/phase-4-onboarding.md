@@ -14,6 +14,14 @@ Build the processing page with inline Q&A workflow and the classification review
 
 ---
 
+## Integration References
+
+Before implementing currency selection in this phase, review:
+
+- **[integration-twelve-data.md](./integration-twelve-data.md)** - Complete Twelve Data currency exchange integration guide including exchange rate API, currency conversion, supported currencies list, and caching strategies.
+
+---
+
 ## Navigation Flow
 
 ```
@@ -94,19 +102,25 @@ OAuth Complete → Processing Page (with inline Q&A) → Triage Page → Results
 ### Components
 
 1. **Event Table**
-   - Columns: Title, Date, Duration, Suggested Tier, Your Tier (dropdown), Reconcile
+   - Columns: Title, Date, Duration, Attendees (referenced with their email addresses), Suggested Tier, Your Tier (dropdown), Reconcile
    - Sortable by any column
    - Filterable by tier, reconciled status
 
+
 2. **Tier Dropdown**
-   - 5 tiers normally: Unique, Founder, Senior, Junior, EA
+   - 5 Hierarchy tiers normally: Unique, Founder, Senior, Junior, EA
+   - 3 Vertical tiers normally: Universal, Engineering, Business
    - **4 tiers for solo founder**: Unique, Senior, Junior, EA (NO Founder)
    - Pre-selected with suggested tier
+   - Every task must be allocated a Hierarchy and a Vertical Tier Dropdown
+   
 
 3. **Reconcile Button**
    - Green checkmark icon (NOT checkbox)
    - Clicking confirms the tier selection
    - Row visually updates to show "reconciled" state
+   - Once reconciled the row disappears with a gentle flash
+   - Once all rows are reconciled provide a celebratory simple animation
 
 4. **Progress Tracking**
    - "X of Y events reviewed"
@@ -129,13 +143,13 @@ OAuth Complete → Processing Page (with inline Q&A) → Triage Page → Results
 │ "Who should do this work?"                                  │
 │                                                             │
 │ ┌─────────────────────────────────────────────────────────┐ │
-│ │ If the answer is...        │ We classify it as...      │ │
+│ │ If the answer is...        │ We classify it as...       │ │
 │ ├─────────────────────────────────────────────────────────┤ │
-│ │ "Only I can do this"       │ Unique                    │ │
-│ │ "A co-founder could do it" │ Founder (hidden for solo) │ │
-│ │ "A senior specialist"      │ Senior                    │ │
-│ │ "A junior team member"     │ Junior                    │ │
-│ │ "An assistant could do it" │ EA                        │ │
+│ │ "Only I can do this"       │ Unique                     │ │
+│ │ "A co-founder could do it" │ Founder (hidden for solo)  │ │
+│ │ "A senior Engineer"        │ Senior Engineer/Universal  │ │
+│ │ "A junior business"        │ Junior Business            │ │
+│ │ "An assistant could do it" │ EA                         │ │
 │ └─────────────────────────────────────────────────────────┘ │
 │                                                             │
 │ [Got it, let's review] [Don't show again]                   │
@@ -158,6 +172,8 @@ Create `src/app/(dashboard)/processing/page.tsx`:
 // - QA Engineer in engineering column
 // - Annual/Hourly toggle with live conversion
 // - Quick presets
+// - **Date Range Picker** with Presets (Past Week, Month, Year), Custom Range, and "Start Calendar Audit" button
+// - **Auto-Start Logic**: On mount, if no auditId provided, trigger `POST /api/audit/create` automatically (or wait for user to click Start if they want to change dates first)
 // - Continue button disabled until both processing AND Q&A complete
 ```
 
@@ -305,6 +321,49 @@ Create `src/app/(dashboard)/triage/[auditId]/page.tsx`:
 | Answers persist | Refresh preserves values |
 
 **Do not proceed to Phase 5 until all tests pass.**
+
+---
+
+## User Review & Verification
+
+**⏸️ STOP: User review required before proceeding to the next phase.**
+
+The agent has completed this phase. Before continuing, please verify the build yourself.
+
+### Manual Testing Checklist
+
+| # | Test | Steps | Expected Result |
+|---|------|-------|-----------------|
+| 1 | Processing page loads | Navigate to `/processing` after OAuth | Q&A form visible with team composition and compensation inputs |
+| 2 | Team layout correct | Check team composition picker | Engineering roles on LEFT, Business roles on RIGHT, QA Engineer in engineering column |
+| 3 | Annual/Hourly toggle | Enter $300,000 annual, toggle to hourly | Shows ~$144/hr conversion, toggle back shows $300K |
+| 4 | Quick presets work | Click "$500K" preset button | Input fills with 500000 |
+| 5 | Triage page shows events | Navigate to `/triage/[auditId]` | Events listed with tier dropdowns and green checkmark buttons |
+| 6 | Solo founder = 4 tiers | Set team to just 1 founder | Tier dropdown only shows: Unique, Senior, Junior, EA (no Founder) |
+| 7 | Reconcile button | Click green checkmark on an event | Row updates visually, progress counter increments |
+
+### What to Look For
+
+- Smooth flow from processing → triage → results
+- First-time tier explanation modal appears
+- Leave events shown separately (greyed out)
+- All Q&A answers persist after page refresh
+
+### Known Limitations at This Stage
+
+- No payment/subscription yet (coming in Phase 5)
+- No sharing functionality
+- Planning Assistant not available
+
+### Proceed to Next Phase
+
+Once you've verified the above, instruct the agent:
+
+> "All Phase 4 tests pass. Proceed to Phase 5: Monetization."
+
+If issues were found:
+
+> "Phase 4 issue: [describe problem]. Please fix before proceeding."
 
 ---
 

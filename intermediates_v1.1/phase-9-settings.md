@@ -14,6 +14,18 @@ Build the contacts comparison feature and comprehensive settings page. This phas
 
 ---
 
+## Integration References
+
+This phase uses multiple external integrations. Review the relevant documents:
+
+| Feature | Integration Document |
+|---------|---------------------|
+| Contact invitations | [integration-resend.md](./integration-resend.md) |
+| BYOK API key management | [integration-openai.md](./integration-openai.md) |
+| Currency settings | [integration-twelve-data.md](./integration-twelve-data.md) |
+
+---
+
 ## Contacts System
 
 ### Database Schema
@@ -376,6 +388,50 @@ Exported: January 5, 2025
 | Privacy toggle | Hides score |
 
 **Do not proceed to Phase 10 until all tests pass.**
+
+---
+
+## User Review & Verification
+
+**⏸️ STOP: User review required before proceeding to the next phase.**
+
+The agent has completed this phase. Before continuing, please verify the build yourself.
+
+### Manual Testing Checklist
+
+| # | Test | Steps | Expected Result |
+|---|------|-------|-----------------|
+| 1 | Settings page loads | Navigate to `/settings` | All sections visible with current values populated |
+| 2 | Username editable | Change username, save, refresh | New name persists and shows in results page |
+| 3 | Team composition saves | Modify team, save, check layout | Engineering LEFT, Business RIGHT, QA included |
+| 4 | Compensation saves | Update salary, view results | Arbitrage recalculates with new value |
+| 5 | BYOK key validation | Enter invalid API key | Error shown, not saved |
+| 6 | JSON export | Click "Export (JSON)" | File downloads with valid JSON containing all your data |
+| 7 | Markdown export | Click "Export (Markdown)" | File downloads with readable summary |
+| 8 | Contact invite | Enter an email, send invite | Email sent, appears in pending invitations |
+| 9 | Account deletion | Click Delete Account, follow prompts | Must type "DELETE", then signed out and redirected |
+
+### What to Look For
+
+- All settings persist after page refresh
+- Export files contain complete, accurate data
+- Contact invitations work end-to-end
+- Delete account properly removes all data
+
+### Known Limitations at This Stage
+
+- Contact leaderboard requires 2+ accounts
+- Email functionality requires Resend configured
+
+### Proceed to Next Phase
+
+Once you've verified the above, instruct the agent:
+
+> "All Phase 9 tests pass. Proceed to Phase 10: Polish & Validation."
+
+If issues were found:
+
+> "Phase 9 issue: [describe problem]. Please fix before proceeding."
 
 ---
 

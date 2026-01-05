@@ -2,7 +2,13 @@
 
 ## Overview
 
-Build the results report page and role recommendation engine. This phase transforms audit data into actionable hiring recommendations with job descriptions, and presents results in a compelling, shareable format.
+Build the results report page and role recommendation engine. This phase transforms audit data into 
+
+1. actionable hiring recommendations with job descriptions
+2. actionable suggestions for delegation to existing team members
+3. actionable suggestions of how to better group tasks and plan work to deliver greater efficiency 
+
+The results report page presents results in a compelling, shareable format.
 
 ---
 
@@ -14,6 +20,14 @@ Build the results report page and role recommendation engine. This phase transfo
 
 ---
 
+## Integration References
+
+Before implementing the email sharing features in this phase, review:
+
+- **[integration-resend.md](./integration-resend.md)** - Complete Resend email integration guide including batch sending, React Email templates, and API route implementation for sharing reports.
+
+---
+
 ## Role Clustering Algorithm
 
 ### Two-Dimensional Clustering
@@ -21,7 +35,7 @@ Build the results report page and role recommendation engine. This phase transfo
 Roles are determined by:
 1. **Tier** (seniority): Senior, Junior, or EA
 2. **Business Area** (specialization): From keyword matching
-3. **Vertical** (for Senior/Junior): Engineering or Business
+3. **Vertical** (for Senior/Junior): Universal, Engineering or Business
 
 ### Minimum Hours Threshold
 
@@ -150,6 +164,7 @@ export const roleRecommendations = pgTable('role_recommendations', {
 | Planning Score | `XX%` (always with % symbol) |
 
 ### 3. Tier Breakdown Chart
+- **Title:** "How you spend your time on tasks that you can uniquely do vs those you can delegate"
 - Visual chart showing hours by tier
 - Color-coded by tier
 - Percentages labeled
@@ -163,6 +178,8 @@ export const roleRecommendations = pgTable('role_recommendations', {
 
 ### 5. "Delegate to Your Team" Section
 *Only show if user has existing team members*
+
+**Logic Override:** If existing team members match a recommended role tier/vertical (e.g. you have a Junior Engineer and the system recommends hiring a Junior Developer), **suppress** the hiring recommendation and instead feature it heavily in this "Delegate to Your Team" section.
 
 | Role | Team Count | Tasks to Delegate | Potential Savings |
 |------|------------|-------------------|-------------------|
@@ -178,6 +195,48 @@ export const roleRecommendations = pgTable('role_recommendations', {
 - Expandable job description
 - **Drag-and-drop only when 2+ roles**
 - Copy JD button
+
+### 8. Share Results Section
+Located at the bottom of the results page, before the Subscribe CTA.
+
+#### Email Sharing Component
+Multi-email input field for sending results directly to recipients:
+
+**Behavior:**
+- Text input field with placeholder "Enter email addresses..."
+- When user types an email and presses **Space**, the email becomes a tag/chip
+- Tags are displayed inline with an "x" to remove
+- User can continue adding more emails (repeat space to add)
+- When user presses **Enter**, send the report to all tagged email addresses
+- Show loading state while sending
+- Show success toast: "Report sent to X recipients"
+- Clear all tags after successful send
+- Validate email format before creating tag (show error for invalid emails)
+
+**UI Specifications:**
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Share Your Results                                          │
+├─────────────────────────────────────────────────────────────┤
+│ Send to colleagues:                                         │
+│ ┌─────────────────────────────────────────────────────────┐ │
+│ │ [john@co.com ×] [sarah@co.com ×] [type here...]        │ │
+│ └─────────────────────────────────────────────────────────┘ │
+│ Press Space to add, Enter to send                           │
+│                                                             │
+│ Or share via:                                               │
+│ [LinkedIn] [Twitter/X] [Copy Link]                          │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### Social Media Sharing Links
+- **LinkedIn:** Pre-populated post with audit summary and link
+- **Twitter/X:** Pre-populated tweet with headline metric and link
+- **Copy Link:** Generates shareable URL and copies to clipboard
+
+**Pre-populated Social Content:**
+- LinkedIn: "I just discovered I'm losing ${heroMetric}/year on work I should be delegating. Check out Founder Bleed to audit your calendar. [link]"
+- Twitter/X: "🩸 ${heroMetric}/year bleeding out on delegatable work. Time for a calendar triage. [link]"
 
 ---
 
@@ -327,7 +386,149 @@ Key components:
 - Charts
 - Event table with inline editing
 - Role recommendations with drag-drop (when 2+ roles)
+- Share results section
 - Subscribe CTA (free users)
+
+### 3.3 Multi-Email Input Component
+
+Create `src/components/multi-email-input.tsx`:
+
+```typescript
+interface MultiEmailInputProps {
+  onSend: (emails: string[]) => Promise<void>;
+  disabled?: boolean;
+}
+
+export function MultiEmailInput({ onSend, disabled }: MultiEmailInputProps) {
+  const [emails, setEmails] = useState<string[]>([]);
+  const [inputValue, setInputValue] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isSending, setIsSending] = useState(false);
+
+  const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === ' ' && inputValue.trim()) {
+      e.preventDefault();
+      const email = inputValue.trim();
+      if (isValidEmail(email)) {
+        if (!emails.includes(email)) {
+          setEmails([...emails, email]);
+        }
+        setInputValue('');
+        setError(null);
+      } else {
+        setError('Invalid email format');
+      }
+    }
+
+    if (e.key === 'Enter' && emails.length > 0) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  const removeEmail = (emailToRemove: string) => {
+    setEmails(emails.filter(e => e !== emailToRemove));
+  };
+
+  const handleSend = async () => {
+    setIsSending(true);
+    try {
+      await onSend(emails);
+      setEmails([]);
+      toast.success(`Report sent to ${emails.length} recipient(s)`);
+    } catch (err) {
+      toast.error('Failed to send report');
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  return (
+    // ... JSX with tags display, input, and send button
+  );
+}
+```
+
+### 3.4 Social Share Links Component
+
+Create `src/components/social-share-links.tsx`:
+
+```typescript
+interface SocialShareLinksProps {
+  shareUrl: string;
+  heroMetric: string; // e.g., "$127,000"
+}
+
+export function SocialShareLinks({ shareUrl, heroMetric }: SocialShareLinksProps) {
+  const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
+  const twitterText = `🩸 ${heroMetric}/year bleeding out on delegatable work. Time for a calendar triage.`;
+  const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(twitterText)}&url=${encodeURIComponent(shareUrl)}`;
+
+  const copyLink = async () => {
+    await navigator.clipboard.writeText(shareUrl);
+    toast.success('Link copied to clipboard');
+  };
+
+  return (
+    <div className="flex gap-2">
+      <Button variant="outline" asChild>
+        <a href={linkedInUrl} target="_blank" rel="noopener noreferrer">
+          <LinkedInIcon /> LinkedIn
+        </a>
+      </Button>
+      <Button variant="outline" asChild>
+        <a href={twitterUrl} target="_blank" rel="noopener noreferrer">
+          <TwitterIcon /> Twitter/X
+        </a>
+      </Button>
+      <Button variant="outline" onClick={copyLink}>
+        <LinkIcon /> Copy Link
+      </Button>
+    </div>
+  );
+}
+```
+
+### 3.5 Send Report API Endpoint
+
+Create `src/app/api/share/send-report/route.ts`:
+
+```typescript
+export async function POST(request: Request) {
+  const session = await getSession();
+  if (!session) return unauthorized();
+
+  const { auditId, emails } = await request.json();
+
+  // Validate emails
+  for (const email of emails) {
+    if (!isValidEmail(email)) {
+      return NextResponse.json({ error: 'Invalid email' }, { status: 400 });
+    }
+  }
+
+  // Generate share token if not exists
+  const shareToken = await getOrCreateShareToken(auditId);
+  const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL}/share/${shareToken}`;
+
+  // Send emails via Resend
+  for (const email of emails) {
+    await resend.emails.send({
+      from: 'Founder Bleed <noreply@founderbleed.com>',
+      to: email,
+      subject: `${session.user.name} shared their calendar audit with you`,
+      html: generateShareEmailTemplate({ shareUrl, senderName: session.user.name })
+    });
+
+    // Store as lead
+    await storeEmailLead(email, shareToken);
+  }
+
+  return NextResponse.json({ success: true, sentCount: emails.length });
+}
+```
 
 ---
 
@@ -431,6 +632,48 @@ Key components:
 - Visual indication shown
 - Progress tracked
 
+### RESULTS-10: Multi-Email Input Works
+
+**What to verify:**
+- Find the "Share Your Results" section
+- Type an email address and press Space
+- Type another email and press Space
+- Press Enter to send
+
+**Success criteria:**
+- Email becomes a tag/chip when Space is pressed
+- Invalid emails show error message
+- Multiple tags can be added
+- Tags have "x" button to remove
+- Enter sends to all tagged emails
+- Loading state shown while sending
+- Success toast: "Report sent to X recipients"
+- Tags clear after successful send
+
+### RESULTS-11: Email Validation Works
+
+**What to verify:**
+- Type invalid email (e.g., "notanemail") and press Space
+- Type valid email and press Space
+
+**Success criteria:**
+- Invalid email shows error, no tag created
+- Valid email creates tag
+- Duplicate emails are ignored (no duplicate tags)
+
+### RESULTS-12: Social Share Links Work
+
+**What to verify:**
+- Click LinkedIn share button
+- Click Twitter/X share button
+- Click Copy Link button
+
+**Success criteria:**
+- LinkedIn opens share dialog with pre-populated content
+- Twitter opens tweet composer with hero metric and link
+- Copy Link copies URL to clipboard with success toast
+- All links include the shareable report URL
+
 ---
 
 ## Handoff Requirements
@@ -449,8 +692,58 @@ Phase 3 is complete when ALL of the following are true:
 | Multiple roles enable drag | Drag handles with 2+ roles |
 | JDs are copyable | Copy works, format preserved |
 | Reconcile button works | Checkmark marks event |
+| Multi-email input works | Space adds tag, Enter sends |
+| Email validation | Invalid emails rejected |
+| Social share links | LinkedIn, Twitter/X, Copy Link work |
 
 **Do not proceed to Phase 4 until all tests pass and all handoff requirements are met.**
+
+---
+
+## User Review & Verification
+
+**⏸️ STOP: User review required before proceeding to the next phase.**
+
+The agent has completed this phase. Before continuing, please verify the build yourself.
+
+### Manual Testing Checklist
+
+| # | Test | Steps | Expected Result |
+|---|------|-------|-----------------|
+| 1 | Results page loads | Navigate to `/results/[auditId]` | Page renders with metrics, charts, and recommendations |
+| 2 | Username editable | Click on username field, change it, refresh | New name persists, hero metric shows "{YourName}, You're Losing..." |
+| 3 | Planning Score shows % | Check the Planning Score card | Shows "65%" not "65" (always with % symbol) |
+| 4 | Tier dropdown works | Change an event's tier in the table | Metrics update in real-time without page refresh |
+| 5 | Role recommendations | Scroll to recommendations section | At least one role card with job description visible |
+| 6 | No salary = no NaN | If salary not set, check Arbitrage card | Shows "Set compensation to view costs", not "$0" or "NaN" |
+| 7 | Multi-email input | Type email, press Space, repeat, press Enter | Emails become tags, Enter sends report to all recipients |
+| 8 | Social share links | Click LinkedIn, Twitter/X, Copy Link buttons | Opens share dialogs with pre-populated content, copy shows toast |
+
+### What to Look For
+
+- All summary cards display valid data
+- Tier breakdown chart shows colored segments
+- Event table is sortable and filterable
+- Green checkmark reconcile buttons (not checkboxes)
+- Job descriptions include "Tasks You'll Take Over" with hours
+- Share section visible with email input and social buttons
+- Email tags display inline with remove buttons
+
+### Known Limitations at This Stage
+
+- No onboarding flow yet (coming in Phase 4)
+- User must manually navigate to results page
+- No subscription/paywall yet
+
+### Proceed to Next Phase
+
+Once you've verified the above, instruct the agent:
+
+> "All Phase 3 tests pass. Proceed to Phase 4: Onboarding Flow."
+
+If issues were found:
+
+> "Phase 3 issue: [describe problem]. Please fix before proceeding."
 
 ---
 

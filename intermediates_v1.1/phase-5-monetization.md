@@ -14,6 +14,14 @@ Build the subscription system with Stripe integration, feature gating, and email
 
 ---
 
+## Integration References
+
+Before implementing the email-gated sharing features in this phase, review:
+
+- **[integration-resend.md](./integration-resend.md)** - Complete Resend email integration guide including verification email templates, batch sending, and lead capture implementation.
+
+---
+
 ## Subscription Tiers
 
 | Tier | Price | LLM Budget | Support |
@@ -120,8 +128,8 @@ export async function POST(request: NextRequest) {
   const { tier, billingPeriod } = await request.json();
 
   const priceId = billingPeriod === 'annual'
-    ? STRIPE_ANNUAL_PRICES[tier]
-    : STRIPE_MONTHLY_PRICES[tier];
+    ? process.env[`STRIPE_PRICE_ID_${tier.toUpperCase()}_ANNUAL`]
+    : process.env[`STRIPE_PRICE_ID_${tier.toUpperCase()}_MONTHLY`];
 
   const checkoutSession = await stripe.checkout.sessions.create({
     customer_email: session.user.email,
@@ -192,22 +200,50 @@ When gated feature accessed, show modal with:
 
 ---
 
-## Email-Gated Sharing
+## Sharing Options
 
-### Share Flow
+### Option 1: Direct Email Sharing (from Results Page)
+
+Users can send their report directly to colleagues from the results page:
 
 ```
-1. User clicks "Share Report"
-2. System generates secure token (32+ chars)
-3. User gets shareable URL: /share/[token]
-4. Visitor clicks link
-5. Email capture modal appears
-6. Visitor enters email
-7. System sends verification email
-8. Visitor clicks verification link
-9. Report becomes visible
-10. Email stored as lead
+1. User finds "Share Your Results" section on results page
+2. User types email address and presses Space (creates tag)
+3. User repeats to add multiple recipients
+4. User presses Enter to send
+5. System generates secure share token (if not exists)
+6. System sends email to each recipient via Resend
+7. Email contains link to /share/[token]
+8. Recipients' emails stored as leads
+9. Success toast: "Report sent to X recipients"
 ```
+
+### Option 2: Social Media Sharing
+
+Users can share via social platforms:
+- **LinkedIn:** Opens share dialog with pre-populated audit summary
+- **Twitter/X:** Opens tweet composer with hero metric
+- **Copy Link:** Copies shareable URL to clipboard
+
+### Option 3: Manual Link Sharing
+
+Users can copy the share link and distribute manually.
+
+### Email-Gated Viewing (for Recipients)
+
+When anyone visits a shared report link:
+
+```
+1. Visitor clicks shared link
+2. Email capture modal appears
+3. Visitor enters email
+4. System sends verification email
+5. Visitor clicks verification link
+6. Report becomes visible
+7. Email stored as lead
+```
+
+**Note:** This applies to ALL shared links, regardless of how they were distributed.
 
 ### Shared Report Content
 
@@ -305,18 +341,43 @@ When gated feature accessed, show modal with:
 - Returns 200
 - Chat interface loads
 
-### MONEY-06: Share Link Requires Email
+### MONEY-06: Direct Email Sharing Works
 
 **What to verify:**
-- Generate share link
-- Open in incognito browser
+- Go to results page
+- Enter emails in the share input (press Space after each)
+- Press Enter to send
+
+**Success criteria:**
+- Emails become tags when Space is pressed
+- Enter sends report to all recipients
+- Recipients receive email with share link
+- Success toast shows recipient count
+
+### MONEY-07: Social Share Links Work
+
+**What to verify:**
+- Click LinkedIn share button
+- Click Twitter/X share button
+- Click Copy Link button
+
+**Success criteria:**
+- LinkedIn opens with pre-populated content
+- Twitter opens with hero metric in tweet
+- Copy Link copies URL and shows toast
+- All links point to /share/[token]
+
+### MONEY-08: Share Link Requires Email (Recipients)
+
+**What to verify:**
+- Open share link in incognito browser
 
 **Success criteria:**
 - Email capture modal appears
 - Cannot view without email
 - After verification, report displays
 
-### MONEY-07: Shared Report Hides Salary
+### MONEY-09: Shared Report Hides Salary
 
 **What to verify:**
 - View shared report
@@ -328,7 +389,7 @@ When gated feature accessed, show modal with:
 - Equity NOT visible
 - CTA points to `/` not Stripe
 
-### MONEY-08: BYOK Key Encrypted
+### MONEY-10: BYOK Key Encrypted
 
 **What to verify:**
 - Save a BYOK API key
@@ -338,7 +399,7 @@ When gated feature accessed, show modal with:
 - Database has encrypted value (not plaintext)
 - Key validation occurs on save
 
-### MONEY-09: Customer Portal Works
+### MONEY-11: Customer Portal Works
 
 **What to verify:**
 - Subscriber requests portal link
@@ -358,13 +419,60 @@ When gated feature accessed, show modal with:
 | Free audit limit | Second audit blocked |
 | Planning gated | Free users see paywall |
 | Subscribers access Planning | No paywall |
-| Share requires email | Must enter email to view |
+| Direct email sharing | Space adds tags, Enter sends |
+| Social share links | LinkedIn, Twitter/X, Copy Link work |
+| Share link requires email | Recipients must verify email |
 | Shared reports hide salary | Sensitive data not exposed |
 | CTA → landing page | Not to Stripe |
 | BYOK works | Keys save encrypted |
 | Portal works | Subscribers can manage billing |
 
 **Do not proceed to Phase 6 until all tests pass.**
+
+---
+
+## User Review & Verification
+
+**⏸️ STOP: User review required before proceeding to the next phase.**
+
+The agent has completed this phase. Before continuing, please verify the build yourself.
+
+### Manual Testing Checklist
+
+| # | Test | Steps | Expected Result |
+|---|------|-------|-----------------|
+| 1 | Free audit limit | As a free user, try to run a second audit | Shows "Free audit used" message, prompts to upgrade |
+| 2 | Stripe checkout | Click Subscribe, select a plan | Redirects to Stripe checkout page |
+| 3 | Subscription activates | Complete Stripe test payment | Dashboard becomes accessible, subscription active |
+| 4 | Planning gated | As free user, try to access Planning Assistant | Paywall modal appears |
+| 5 | Direct email sharing | On results page, add emails (Space), send (Enter) | Emails become tags, recipients receive share email |
+| 6 | Social share links | Click LinkedIn, Twitter/X, Copy Link buttons | Opens share dialogs, copy shows toast |
+| 7 | Share link requires email | Open share link in incognito | Must enter email before viewing report |
+| 8 | Shared report hides salary | View a shared report | Efficiency score visible, but NO salary/equity shown |
+| 9 | Share CTA goes to landing | On shared report, click the main CTA | Goes to `/` (landing page), NOT to Stripe |
+
+### What to Look For
+
+- Stripe test mode payments complete successfully
+- Webhook updates subscription status in database
+- Free users see upgrade prompts at appropriate places
+- Subscriber features unlock after payment
+
+### Known Limitations at This Stage
+
+- Using Stripe test mode (not real payments)
+- BYOK key validation may need API keys to test
+- Email verification for shares requires email service configured
+
+### Proceed to Next Phase
+
+Once you've verified the above, instruct the agent:
+
+> "All Phase 5 tests pass. Proceed to Phase 6: Landing Page."
+
+If issues were found:
+
+> "Phase 5 issue: [describe problem]. Please fix before proceeding."
 
 ---
 

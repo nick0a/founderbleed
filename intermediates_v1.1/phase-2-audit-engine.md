@@ -89,6 +89,14 @@ export const events = pgTable('events', {
 | **Junior** | Entry-level work | Code reviews, documentation, testing, bug fixes |
 | **EA** | Administrative work | Scheduling, travel, expenses, calendar management |
 
+#### Vertical
+
+| Vertical | Description | Examples |
+|------------|-------------|----------|
+| **Universal** | Bridges both engineering and business domains; generalist work | Cross-functional leadership, general operations, strategy execution |
+| **Technical** | Engineering and technical work | Development, architecture, DevOps, QA, data engineering |
+| **Business** | Business operations and growth work | Sales, marketing, finance, HR, customer success, legal |
+
 ### Solo Founder Logic
 
 **CRITICAL:** If `user.teamComposition.founder === 1`, hide "Founder" tier:
@@ -729,7 +737,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
 ## Test Instructions
 
-Before proceeding to Phase 3, verify all of the following.
+Before proceeding to Phase 3, you must run tests to verify all of the following.
 
 **Retry Policy:** If a test fails, fix the issue and retry. After 5 failed attempts on the same test, stop and ask the user for guidance.
 
@@ -845,6 +853,47 @@ Phase 2 is complete when ALL of the following are true:
 | Planning score works | Score 0-100, assessment generated |
 
 **Do not proceed to Phase 3 until all tests pass and all handoff requirements are met.**
+
+---
+
+## User Review & Verification
+
+**⏸️ STOP: User review required before proceeding to the next phase.**
+
+The agent has completed this phase. Before continuing, please verify the build yourself.
+
+### Manual Testing Checklist
+
+| # | Test | Steps | Expected Result |
+|---|------|-------|-----------------|
+| 1 | Create an audit | Trigger an audit for the past month via the API or UI | Audit completes, events are classified |
+| 2 | Events classified | Check the database `events` table | Each event has `suggested_tier` assigned (unique/founder/senior/junior/ea) |
+| 3 | Leave detected | Create a calendar event titled "Vacation" or "PTO", run audit | Event marked with `is_leave: true` |
+| 4 | Metrics calculated | View the audit run's `computed_metrics` | Hours by tier, efficiency score (0-100), no NaN values |
+| 5 | No NaN anywhere | Check `computed_metrics` fields | All values are numbers or null, never "NaN" |
+
+### What to Look For
+
+- All calendar events ingested and encrypted in database
+- Classification assigns reasonable tiers based on event titles
+- Leave periods properly excluded from work calculations
+- Planning score calculated (0-100 integer)
+
+### Known Limitations at This Stage
+
+- No UI to view results yet (coming in Phase 3)
+- Classification is keyword-based, may need manual correction
+- No triage page for reviewing classifications
+
+### Proceed to Next Phase
+
+Once you've verified the above, instruct the agent:
+
+> "All Phase 2 tests pass. Proceed to Phase 3: Results & Recommendations."
+
+If issues were found:
+
+> "Phase 2 issue: [describe problem]. Please fix before proceeding."
 
 ---
 
