@@ -27,11 +27,12 @@
 
 ### Git Discipline
 
-After completing each phase, commit all changes:
+After completing each phase, commit and push to trigger Vercel deployment:
 
 ```bash
 git add .
 git commit -m "feat(phase-X): <brief description of what was built>"
+git push
 ```
 
 Commit message format:
@@ -40,7 +41,7 @@ Commit message format:
 - `feat(phase-2): audit engine and classification`
 - ...and so on
 
-This creates clear checkpoints for each phase.
+This creates clear checkpoints and triggers a Vercel preview deployment for each phase.
 
 ### Retry Policy
 
