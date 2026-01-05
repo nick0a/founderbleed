@@ -200,3 +200,21 @@ export const events = pgTable("events", {
   leaveConfidence: text("leave_confidence"),
   planningScore: integer("planning_score"),
 });
+
+export const roleRecommendations = pgTable("role_recommendations", {
+  id: text("id").primaryKey(),
+  auditRunId: text("audit_run_id").references(() => auditRuns.id, {
+    onDelete: "cascade",
+  }),
+  roleTitle: text("role_title").notNull(),
+  roleTier: text("role_tier").notNull(),
+  vertical: text("vertical"),
+  businessArea: text("business_area").notNull(),
+  hoursPerWeek: numeric("hours_per_week").notNull(),
+  costWeekly: numeric("cost_weekly").notNull(),
+  costMonthly: numeric("cost_monthly").notNull(),
+  costAnnual: numeric("cost_annual").notNull(),
+  jdText: text("jd_text"),
+  tasksList: jsonb("tasks_list"),
+  createdAt: timestamp("created_at").defaultNow(),
+});

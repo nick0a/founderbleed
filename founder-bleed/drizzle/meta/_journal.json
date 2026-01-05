@@ -15,6 +15,13 @@
       "when": 1767605155624,
       "tag": "0001_high_magdalene",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1767606750666,
+      "tag": "0002_role_recommendations",
+      "breakpoints": true
     }
   ]
 }
