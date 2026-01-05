@@ -338,6 +338,44 @@ export const contacts = pgTable('contacts', {
 });
 
 // ============================================
+// Scheduled Audits (Automated recurring)
+// ============================================
+
+export const scheduledAudits = pgTable('scheduled_audits', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .unique()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  frequency: text('frequency').default('weekly'), // weekly, monthly, annual
+  dayOfWeek: integer('day_of_week').default(6), // 0=Sunday, 6=Saturday
+  hour: integer('hour').default(3), // 3am
+  timezone: text('timezone').default('UTC'),
+  lastRunAt: timestamp('last_run_at'),
+  nextRunAt: timestamp('next_run_at'),
+  enabled: boolean('enabled').default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// ============================================
+// Notifications
+// ============================================
+
+export const notifications = pgTable('notifications', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  type: text('type').notNull(), // audit_ready, subscription, contact_invite, system
+  title: text('title').notNull(),
+  body: text('body'),
+  link: text('link'),
+  readAt: timestamp('read_at'),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// ============================================
 // Planning Sessions (AI Assistant)
 // ============================================
 
