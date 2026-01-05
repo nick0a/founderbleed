@@ -71,7 +71,7 @@ export async function GET(
   });
 }
 
-// Update event tier (for reconciliation)
+// Update event (tier, reconciled status, leave status)
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -90,18 +90,18 @@ export async function PATCH(
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const { eventId, finalTier } = body;
+  const { eventId, finalTier, reconciled, isLeave } = body;
 
-  if (!eventId || !finalTier) {
+  if (!eventId) {
     return NextResponse.json(
-      { error: 'eventId and finalTier are required' },
+      { error: 'eventId is required' },
       { status: 400 }
     );
   }
 
   // Valid tiers
   const validTiers = ['unique', 'founder', 'senior', 'junior', 'ea'];
-  if (!validTiers.includes(finalTier)) {
+  if (finalTier !== undefined && !validTiers.includes(finalTier)) {
     return NextResponse.json(
       { error: 'Invalid tier. Must be one of: unique, founder, senior, junior, ea' },
       { status: 400 }
@@ -134,20 +134,33 @@ export async function PATCH(
     return NextResponse.json({ error: 'Event not found' }, { status: 404 });
   }
 
-  // Update event tier
+  // Build update object
+  const updateData: Record<string, unknown> = {};
+
+  if (finalTier !== undefined) {
+    updateData.finalTier = finalTier;
+    // Auto-reconcile when tier is changed
+    updateData.reconciled = true;
+  }
+
+  if (reconciled !== undefined) {
+    updateData.reconciled = reconciled;
+  }
+
+  if (isLeave !== undefined) {
+    updateData.isLeave = isLeave;
+  }
+
+  // Update event
   await db
     .update(events)
-    .set({
-      finalTier,
-      reconciled: true,
-    })
+    .set(updateData)
     .where(eq(events.id, eventId));
 
   return NextResponse.json({
     success: true,
     eventId,
-    previousTier: event.finalTier,
-    newTier: finalTier,
-    message: 'Event tier updated. Call /recalculate to update metrics.',
+    updates: updateData,
+    message: 'Event updated. Call /recalculate to update metrics.',
   });
 }
