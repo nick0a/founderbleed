@@ -129,7 +129,7 @@ export const calendarConnections = pgTable('calendar_connections', {
 });
 
 // ============================================
-// Audits
+// Audits (Audit Runs)
 // ============================================
 
 export const audits = pgTable('audits', {
@@ -137,12 +137,19 @@ export const audits = pgTable('audits', {
   userId: uuid('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
-  startDate: timestamp('start_date').notNull(),
-  endDate: timestamp('end_date').notNull(),
-  algorithmVersion: text('algorithm_version').default('1.7'),
-  status: text('status').default('pending'), // pending, processing, completed, failed
-  results: jsonb('results'),
+  dateStart: timestamp('date_start', { mode: 'date' }).notNull(),
+  dateEnd: timestamp('date_end', { mode: 'date' }).notNull(),
   createdAt: timestamp('created_at').defaultNow(),
+  calendarsIncluded: text('calendars_included').array(),
+  exclusionsUsed: text('exclusions_used').array(),
+  computedMetrics: jsonb('computed_metrics'),
+  planningScore: integer('planning_score'), // 0-100
+  planningAssessment: text('planning_assessment'), // markdown
+  status: text('status').default('pending'), // pending, processing, completed, failed
+  algorithmVersion: text('algorithm_version').default('1.7').notNull(),
+  leaveDaysDetected: integer('leave_days_detected').default(0),
+  leaveHoursExcluded: numeric('leave_hours_excluded').default('0'),
+  frequency: text('frequency').default('manual'), // manual, weekly, monthly, annual
   completedAt: timestamp('completed_at'),
 });
 
@@ -155,17 +162,35 @@ export const events = pgTable('events', {
   auditId: uuid('audit_id')
     .notNull()
     .references(() => audits.id, { onDelete: 'cascade' }),
-  googleEventId: text('google_event_id'),
+  externalEventId: text('external_event_id'),
+  startAt: timestamp('start_at').notNull(),
+  endAt: timestamp('end_at').notNull(),
+  durationMinutes: integer('duration_minutes'),
+  isAllDay: boolean('is_all_day').default(false),
+  calendarId: text('calendar_id'),
   title: text('title'), // encrypted
   description: text('description'), // encrypted
-  startTime: timestamp('start_time').notNull(),
-  endTime: timestamp('end_time').notNull(),
-  durationMinutes: integer('duration_minutes'),
-  tier: text('tier'), // unique, founder, senior, junior, ea
-  aiClassification: jsonb('ai_classification'),
-  userOverride: text('user_override'),
-  isRecurring: boolean('is_recurring').default(false),
   attendeesCount: integer('attendees_count').default(0),
+  hasMeetLink: boolean('has_meet_link').default(false),
+  isRecurring: boolean('is_recurring').default(false),
+
+  // Classification
+  suggestedTier: text('suggested_tier'), // unique, founder, senior, junior, ea
+  finalTier: text('final_tier'),
+  reconciled: boolean('reconciled').default(false),
+  businessArea: text('business_area'),
+  vertical: text('vertical'), // engineering, business
+  confidenceScore: text('confidence_score'), // high, medium, low
+  keywordsMatched: text('keywords_matched').array(),
+
+  // Leave detection
+  isLeave: boolean('is_leave').default(false),
+  leaveDetectionMethod: text('leave_detection_method'),
+  leaveConfidence: text('leave_confidence'), // high, medium, low
+
+  // Planning
+  planningScore: integer('planning_score'), // 0-100 per event
+
   createdAt: timestamp('created_at').defaultNow(),
 });
 
