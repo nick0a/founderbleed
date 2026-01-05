@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { auditRuns, users } from '@/lib/db/schema';
+import { auditRuns } from '@/lib/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

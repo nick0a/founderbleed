@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Send, Calendar } from "lucide-react";
 
-export default function PlanningClient({ user, auditRun, isSubscribed }: any) {
+export default function PlanningClient({ auditRun, isSubscribed }: any) {
   const [messages, setMessages] = useState<{role: 'user' | 'assistant', content: string, suggestion?: any}[]>([
     { role: 'assistant', content: "Hi! I've analyzed your audit results. How can I help you plan your week?" }
   ]);

@@ -69,8 +69,8 @@ export function generateRoleRecommendations(
   return recommendations;
 }
 
-function createRole(tier: string, businessArea: string, events: any[], weeklyHours: number, tierRates: any): RoleRecommendation {
-  const vertical = tier === 'ea' ? null : events[0]?.vertical || 'business';
+function createRole(tier: string, businessArea: string, events: { title: string, durationMinutes: number, vertical?: string }[], weeklyHours: number, tierRates: { senior: number; junior: number; ea: number }): RoleRecommendation {
+  const vertical = tier === 'ea' ? null : (events[0]?.vertical as 'engineering' | 'business' | undefined) || 'business';
   const roleTitle = generateRoleTitle(tier, vertical, businessArea);
 
   const rate = tier === 'ea' ? tierRates.ea :

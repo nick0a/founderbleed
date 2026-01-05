@@ -10,12 +10,14 @@ import { GripVertical, Check, Copy } from "lucide-react";
 
 export default function ResultsClient({ auditRun, user, events, recommendations }: any) {
   const [username, setUsername] = useState(user.username || user.name || "Founder");
-  const [localRecs, setLocalRecs] = useState(recommendations);
   
   // Persist username
   useEffect(() => {
     const storedName = localStorage.getItem('username');
-    if (storedName) setUsername(storedName);
+    if (storedName && storedName !== user.username) {
+        setUsername(storedName);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleNameChange = (e: any) => {
@@ -78,10 +80,10 @@ export default function ResultsClient({ auditRun, user, events, recommendations 
       <div className="space-y-4">
         <h3 className="text-2xl font-bold">Recommended Hires</h3>
         <div className="grid gap-4">
-          {localRecs.map((rec: any, idx: number) => (
+          {recommendations.map((rec: any) => (
             <Card key={rec.id} className="relative group">
               <CardHeader className="flex flex-row items-center gap-4">
-                {localRecs.length > 1 && (
+                {recommendations.length > 1 && (
                   <div className="cursor-move" title="Drag to reorder">
                     <GripVertical className="text-muted-foreground" />
                   </div>

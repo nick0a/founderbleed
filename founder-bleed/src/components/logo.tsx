@@ -1,6 +1,9 @@
+"use client"
+
+import { useId } from 'react';
+
 export function Logo({ className }: { className?: string }) {
-  // Use unique gradient ID to prevent conflicts
-  const gradientId = `blood-drop-gradient-${Math.random().toString(36).slice(2)}`;
+  const gradientId = useId();
 
   return (
     <svg className={className} viewBox="0 0 24 32" fill="none">
