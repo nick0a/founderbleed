@@ -195,6 +195,29 @@ export const events = pgTable('events', {
 });
 
 // ============================================
+// Role Recommendations
+// ============================================
+
+export const roleRecommendations = pgTable('role_recommendations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  auditId: uuid('audit_id')
+    .notNull()
+    .references(() => audits.id, { onDelete: 'cascade' }),
+  roleTitle: text('role_title').notNull(),
+  roleTier: text('role_tier').notNull(), // senior, junior, ea
+  vertical: text('vertical'), // engineering, business, null for EA
+  businessArea: text('business_area').notNull(),
+  hoursPerWeek: numeric('hours_per_week').notNull(),
+  costWeekly: numeric('cost_weekly').notNull(),
+  costMonthly: numeric('cost_monthly').notNull(),
+  costAnnual: numeric('cost_annual').notNull(),
+  jdText: text('jd_text'), // markdown
+  tasksList: jsonb('tasks_list'), // [{task: string, hoursPerWeek: number}]
+  sortOrder: integer('sort_order').default(0),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// ============================================
 // Subscriptions (Stripe)
 // ============================================
 
