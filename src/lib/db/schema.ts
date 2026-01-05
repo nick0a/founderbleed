@@ -338,16 +338,20 @@ export const contacts = pgTable('contacts', {
 });
 
 // ============================================
-// Planning Conversations (AI Assistant)
+// Planning Sessions (AI Assistant)
 // ============================================
 
-export const planningConversations = pgTable('planning_conversations', {
+export const planningSessions = pgTable('planning_sessions', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
+  auditId: uuid('audit_id').references(() => audits.id, { onDelete: 'set null' }),
+  sessionType: text('session_type').default('weekly'), // daily, weekly
+  conversationHistory: jsonb('conversation_history').default([]),
+  plannedEvents: jsonb('planned_events').default([]),
+  status: text('status').default('active'), // active, completed, cancelled
   title: text('title'),
-  messages: jsonb('messages').default([]),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
@@ -366,4 +370,4 @@ export type Event = typeof events.$inferSelect;
 export type Subscription = typeof subscriptions.$inferSelect;
 export type ShareLink = typeof shareLinks.$inferSelect;
 export type Contact = typeof contacts.$inferSelect;
-export type PlanningConversation = typeof planningConversations.$inferSelect;
+export type PlanningSession = typeof planningSessions.$inferSelect;
