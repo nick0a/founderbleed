@@ -46,7 +46,7 @@ Build the marketing landing page that introduces the product, explains the value
 - **Subheadline:** "Discover how much you're losing by doing work that should be delegated. Get a personalized hiring prescription in minutes."
 - **Primary CTA:** "TRIAGE YOUR TIME" (centered, prominent)
 - **Badge below CTA:** "AI-Powered Calendar Audit"
-- **Privacy note:** "Read-only calendar access. We never modify your calendar."
+- **Privacy note:** "Read-only calendar access."
 
 ### "How It Works" Carousel
 Interactive 3-step carousel:
