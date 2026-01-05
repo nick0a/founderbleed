@@ -13,6 +13,7 @@ type SchedulePayload = {
   enabled?: boolean;
   dayOfWeek?: number;
   hour?: number;
+  timezone?: string;
 };
 
 function normalizeFrequency(value: string | undefined): AuditFrequency {
@@ -81,13 +82,19 @@ export async function POST(request: NextRequest) {
     typeof payload?.dayOfWeek === "number" ? payload.dayOfWeek : 6;
   const hour = typeof payload?.hour === "number" ? payload.hour : 3;
   const enabled = Boolean(payload?.enabled);
-  const nextRunAt = enabled
-    ? calculateNextRunAt({ frequency, dayOfWeek, hour })
-    : null;
 
   const existing = await db.query.scheduledAudits.findFirst({
     where: eq(scheduledAudits.userId, session.user.id),
   });
+
+  const timezone =
+    typeof payload?.timezone === "string" && payload.timezone.trim()
+      ? payload.timezone.trim()
+      : existing?.timezone || "UTC";
+
+  const nextRunAt = enabled
+    ? calculateNextRunAt({ frequency, dayOfWeek, hour })
+    : null;
 
   if (existing) {
     const [updated] = await db
@@ -96,6 +103,7 @@ export async function POST(request: NextRequest) {
         frequency,
         dayOfWeek,
         hour,
+        timezone,
         enabled,
         nextRunAt,
       })
@@ -113,7 +121,7 @@ export async function POST(request: NextRequest) {
       frequency,
       dayOfWeek,
       hour,
-      timezone: "UTC",
+      timezone,
       enabled,
       nextRunAt,
     })

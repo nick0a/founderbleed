@@ -5,7 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { byokKeys } from "@/lib/db/schema";
-import { encrypt } from "@/lib/encryption";
+import { decrypt, encrypt } from "@/lib/encryption";
 
 const SUPPORTED_PROVIDERS = ["openai", "anthropic", "google"] as const;
 const PRIORITIES = ["byok_first", "budget_first", "byok_premium_only"] as const;
@@ -16,6 +16,15 @@ type ByokPayload = {
   provider?: Provider;
   apiKey?: string;
   priority?: (typeof PRIORITIES)[number];
+};
+
+type ByokUpdatePayload = {
+  provider?: Provider;
+  priority?: (typeof PRIORITIES)[number];
+};
+
+type ByokDeletePayload = {
+  provider?: Provider;
 };
 
 function maskKey(key: string) {
@@ -101,4 +110,85 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ ok: true, key: maskKey(payload.apiKey) });
+}
+
+export async function GET() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  const keys = await db.query.byokKeys.findMany({
+    where: eq(byokKeys.userId, session.user.id),
+  });
+
+  return NextResponse.json({
+    keys: keys.map((key) => {
+      let masked = "***";
+      try {
+        masked = maskKey(decrypt(key.apiKeyEncrypted));
+      } catch {
+        masked = "***";
+      }
+      return {
+        id: key.id,
+        provider: key.provider,
+        priority: key.priority,
+        masked,
+      };
+    }),
+  });
+}
+
+export async function PATCH(request: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  const payload = (await request.json().catch(() => null)) as
+    | ByokUpdatePayload
+    | null;
+  if (!payload?.provider || !payload.priority) {
+    return NextResponse.json({ error: "provider and priority required" }, { status: 400 });
+  }
+
+  if (!SUPPORTED_PROVIDERS.includes(payload.provider)) {
+    return NextResponse.json({ error: "unsupported provider" }, { status: 400 });
+  }
+
+  const priority = PRIORITIES.includes(payload.priority)
+    ? payload.priority
+    : "budget_first";
+
+  await db
+    .update(byokKeys)
+    .set({ priority, createdAt: new Date() })
+    .where(and(eq(byokKeys.userId, session.user.id), eq(byokKeys.provider, payload.provider)));
+
+  return NextResponse.json({ ok: true });
+}
+
+export async function DELETE(request: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  const payload = (await request.json().catch(() => null)) as
+    | ByokDeletePayload
+    | null;
+  if (!payload?.provider) {
+    return NextResponse.json({ error: "provider required" }, { status: 400 });
+  }
+
+  if (!SUPPORTED_PROVIDERS.includes(payload.provider)) {
+    return NextResponse.json({ error: "unsupported provider" }, { status: 400 });
+  }
+
+  await db
+    .delete(byokKeys)
+    .where(and(eq(byokKeys.userId, session.user.id), eq(byokKeys.provider, payload.provider)));
+
+  return NextResponse.json({ ok: true });
 }

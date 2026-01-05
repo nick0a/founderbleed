@@ -308,3 +308,13 @@ export const notifications = pgTable("notifications", {
   readAt: timestamp("read_at"),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+export const contacts = pgTable("contacts", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
+  contactUserId: text("contact_user_id").references(() => users.id),
+  contactEmail: text("contact_email"),
+  status: text("status").default("pending"),
+  invitedAt: timestamp("invited_at").defaultNow(),
+  acceptedAt: timestamp("accepted_at"),
+});

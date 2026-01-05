@@ -6,6 +6,8 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 
 type ProfilePayload = {
+  name?: string;
+  username?: string;
   teamComposition?: Record<string, number>;
   salaryAnnual?: number | string | null;
   salaryInputMode?: "annual" | "hourly" | string;
@@ -18,6 +20,17 @@ type ProfilePayload = {
   juniorEngineeringRate?: number | string | null;
   juniorBusinessRate?: number | string | null;
   eaRate?: number | string | null;
+  notificationPreferences?: {
+    email_audit_ready?: boolean;
+    email_weekly_digest?: boolean;
+    in_app_audit_ready?: boolean;
+  };
+  settings?: {
+    privacy?: {
+      shareScores?: boolean;
+      anonymousMode?: boolean;
+    };
+  };
 };
 
 function toNumber(value: unknown): number | null {
@@ -38,6 +51,22 @@ export async function PATCH(request: NextRequest) {
   }
 
   const updates: Partial<typeof users.$inferInsert> = {};
+
+  const currentUser = await db.query.users.findFirst({
+    where: eq(users.id, session.user.id),
+  });
+
+  if (!currentUser) {
+    return NextResponse.json({ error: "user not found" }, { status: 404 });
+  }
+
+  if (payload.name !== undefined) {
+    updates.name = payload.name?.trim() || null;
+  }
+
+  if (payload.username !== undefined) {
+    updates.username = payload.username?.trim() || null;
+  }
 
   if (payload.teamComposition && typeof payload.teamComposition === "object") {
     updates.teamComposition = payload.teamComposition;
@@ -92,6 +121,25 @@ export async function PATCH(request: NextRequest) {
 
   if (payload.eaRate !== undefined) {
     updates.eaRate = toNumber(payload.eaRate);
+  }
+
+  if (payload.notificationPreferences) {
+    updates.notificationPreferences = {
+      ...(currentUser.notificationPreferences as Record<string, unknown> | null),
+      ...payload.notificationPreferences,
+    };
+  }
+
+  if (payload.settings?.privacy) {
+    const existingSettings = (currentUser.settings || {}) as Record<string, unknown>;
+    const existingPrivacy = (existingSettings.privacy || {}) as Record<string, unknown>;
+    updates.settings = {
+      ...existingSettings,
+      privacy: {
+        ...existingPrivacy,
+        ...payload.settings.privacy,
+      },
+    };
   }
 
   if (Object.keys(updates).length === 0) {

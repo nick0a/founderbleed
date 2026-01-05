@@ -16,7 +16,7 @@ A web app that helps founders reclaim time by analyzing their calendar, classify
 - Planning Score displayed as percentage
 
 ## Current Phase
-Phase 8: Dashboard & Automation (in progress)
+Phase 9: Settings & Contacts (in progress)
 
 ## Key Files
 - See .claude/rules/ for detailed specifications
