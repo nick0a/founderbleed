@@ -323,10 +323,11 @@ function ProcessingPageContent() {
   };
 
   // Date range presets
+  // Subtract (days - 1) so that "Last 7 days" actually gives 7 days inclusive
   const setDatePreset = (days: number) => {
     const end = new Date();
     const start = new Date();
-    start.setDate(start.getDate() - days);
+    start.setDate(start.getDate() - (days - 1));
     setDateStart(start.toISOString().split('T')[0]);
     setDateEnd(end.toISOString().split('T')[0]);
   };
@@ -1019,7 +1020,7 @@ function ProcessingPageContent() {
                     <span className="text-muted-foreground">Date Range</span>
                     <p className="font-medium">{dateStart} to {dateEnd}</p>
                     <p className="text-xs text-muted-foreground">
-                      {Math.ceil((new Date(dateEnd).getTime() - new Date(dateStart).getTime()) / (1000 * 60 * 60 * 24))} days
+                      {Math.ceil((new Date(dateEnd).getTime() - new Date(dateStart).getTime()) / (1000 * 60 * 60 * 24)) + 1} days
                     </p>
                   </div>
                   <div className="p-4 bg-muted rounded-lg">

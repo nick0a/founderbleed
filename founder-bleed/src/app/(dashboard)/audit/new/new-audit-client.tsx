@@ -66,10 +66,11 @@ export default function NewAuditClient() {
   };
 
   // Quick date range presets
+  // Subtract (days - 1) so that "Last 7 days" actually gives 7 days inclusive
   const setPreset = (days: number) => {
     const end = new Date();
     const start = new Date();
-    start.setDate(start.getDate() - days);
+    start.setDate(start.getDate() - (days - 1));
     setDateStart(start.toISOString().split('T')[0]);
     setDateEnd(end.toISOString().split('T')[0]);
   };
