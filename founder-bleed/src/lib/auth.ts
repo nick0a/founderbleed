@@ -3,11 +3,18 @@ import Google from 'next-auth/providers/google';
 import { DrizzleAdapter } from '@auth/drizzle-adapter';
 import { db } from '@/lib/db';
 import { encrypt } from '@/lib/encryption';
-import { calendarConnections } from '@/lib/db/schema';
+import { calendarConnections, users, accounts, sessions, verificationTokens } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
+import { authConfig } from './auth.config';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: DrizzleAdapter(db),
+  ...authConfig,
+  adapter: DrizzleAdapter(db, {
+    usersTable: users,
+    accountsTable: accounts,
+    sessionsTable: sessions,
+    verificationTokensTable: verificationTokens,
+  }),
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
@@ -22,6 +29,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
+    ...authConfig.callbacks,
     async session({ session, token }) {
       if (session.user && token.sub) {
         session.user.id = token.sub;
@@ -74,8 +82,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
   session: { strategy: 'jwt' },
-  pages: {
-    signIn: '/signin',
-    error: '/error',
-  },
 });
