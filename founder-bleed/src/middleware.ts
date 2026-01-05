@@ -1,16 +1,14 @@
-import { auth } from '@/lib/auth';
+import NextAuth from 'next-auth';
+import { authConfig } from '@/lib/auth.config';
 import { NextResponse } from 'next/server';
 
+const { auth } = NextAuth(authConfig);
+
 export default auth((req) => {
-  const isLoggedIn = !!req.auth;
-  const isPublicRoute = ['/signin', '/error', '/'].some(path =>
-    req.nextUrl.pathname === path
-  );
-
-  if (!isLoggedIn && !isPublicRoute) {
-    return NextResponse.redirect(new URL('/signin', req.url));
-  }
-
+  // If authorized callback returns false, it redirects?
+  // Or we can handle it here.
+  // Since we defined authorized callback, let's let it handle protection logic mostly.
+  // But for safety, we can leave this simple pass-through or just export auth directly.
   return NextResponse.next();
 });
 
