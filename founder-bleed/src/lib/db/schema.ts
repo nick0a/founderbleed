@@ -160,3 +160,20 @@ export const events = pgTable('events', {
 
   createdAt: timestamp('created_at').defaultNow()
 });
+
+// Role recommendations
+export const roleRecommendations = pgTable('role_recommendations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  auditRunId: uuid('audit_run_id').references(() => auditRuns.id, { onDelete: 'cascade' }),
+  roleTitle: text('role_title').notNull(),
+  roleTier: text('role_tier').notNull(), // senior, junior, ea
+  vertical: text('vertical'), // engineering, business, null for EA
+  businessArea: text('business_area').notNull(),
+  hoursPerWeek: numeric('hours_per_week').notNull(),
+  costWeekly: numeric('cost_weekly').notNull(),
+  costMonthly: numeric('cost_monthly').notNull(),
+  costAnnual: numeric('cost_annual').notNull(),
+  jdText: text('jd_text'), // markdown
+  tasksList: jsonb('tasks_list'), // [{task: string, hoursPerWeek: number}]
+  createdAt: timestamp('created_at').defaultNow()
+});
