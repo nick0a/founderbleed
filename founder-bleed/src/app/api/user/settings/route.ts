@@ -21,6 +21,9 @@ export async function GET() {
   const user = await db.query.users.findFirst({
     where: eq(users.id, session.user.id),
     columns: {
+      name: true,
+      username: true,
+      email: true,
       salaryAnnual: true,
       salaryInputMode: true,
       currency: true,
@@ -56,7 +59,7 @@ export async function GET() {
   };
 
   return NextResponse.json({
-    ...user,
+    user,
     calendarSettings,
   });
 }

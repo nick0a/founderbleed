@@ -19,7 +19,7 @@ export default function SignInClient() {
         <div className="grid gap-4">
           <Button
             variant="outline"
-            onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
+            onClick={() => signIn('google', { callbackUrl: '/redirect' })}
             className="w-full"
           >
             <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
