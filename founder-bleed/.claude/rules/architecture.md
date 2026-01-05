@@ -2,13 +2,13 @@
 
 ## Stack
 - Next.js App Router with TypeScript
-- Tailwind CSS + shadcn/ui for UI
+- Tailwind CSS + shadcn/ui for UI components
 - Drizzle ORM with PostgreSQL (Neon)
 - NextAuth.js v5 for authentication
-- Stripe for payments
 - next-themes for light/dark mode
+- Stripe for billing, Resend for email
 
 ## Conventions
-- Prefer server components in app routes unless client state is required
-- Keep data access in src/lib and reuse across routes
-- Use env vars via process.env and validate when needed
+- Server components by default; client components only when needed
+- Environment variables live in .env.local; placeholders in .env.example
+- Keep domain rules in .claude/rules for easy reference

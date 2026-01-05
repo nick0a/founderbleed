@@ -1,7 +1,8 @@
-# Database Schema Reference
+# Database Schema
 
-This file tracks the evolving Drizzle schema for Founder Bleed.
+Drizzle schema lives in src/lib/db/schema.ts and evolves per phase.
 
 ## Notes
-- Phase 0 initializes the schema file but does not define tables yet.
-- Update this document as tables are introduced in later phases.
+- Use PostgreSQL via Neon
+- Keep schema definitions co-located with related domain types
+- Add indexes for audit runs and calendar events once defined

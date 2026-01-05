@@ -1,5 +1,5 @@
-import type { NextAuthConfig } from 'next-auth';
+import type { NextAuthConfig } from "next-auth";
 
-export const authConfig: NextAuthConfig = {
+export const authConfig = {
   providers: [],
-};
+} satisfies NextAuthConfig;

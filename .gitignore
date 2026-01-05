@@ -1,6 +1,13 @@
 # Dependencies
 node_modules/
 .pnpm-store/
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 
 # Next.js
 .next/
@@ -26,6 +33,7 @@ build/
 # OS
 .DS_Store
 Thumbs.db
+*.pem
 
 # Debug
 npm-debug.log*
@@ -38,6 +46,10 @@ coverage/
 
 # Typescript
 *.tsbuildinfo
+next-env.d.ts
+
+# Vercel
+.vercel
 
 # Misc
 *.log

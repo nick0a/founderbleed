@@ -4,7 +4,7 @@ These rules must NEVER be violated across the entire codebase:
 
 ## 1. Never Produce NaN
 - All calculations must handle null/undefined gracefully
-- If salary is null, show "Set compensation to view costs" - never $0 or NaN
+- If salary is null, show "Set compensation to view costs" -- never $0 or NaN
 - Pattern: `const value = input ? Number(input) : null`
 
 ## 2. Solo Founder = 4 Tiers
