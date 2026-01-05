@@ -395,6 +395,39 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 }
 ```
 
+### 1.7 Not Found Page (Required for Next.js 14+ with React 19)
+
+**IMPORTANT:** Create `src/app/not-found.tsx` to prevent Vercel build errors:
+
+```typescript
+// src/app/not-found.tsx
+// This file is required to prevent prerendering errors with client providers
+// Next.js 14+ auto-generates a /_not-found page that can fail when wrapped in client providers
+
+export default function NotFound() {
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center">
+      <h1 className="text-4xl font-bold mb-4">404 - Page Not Found</h1>
+      <p className="text-muted-foreground mb-8">The page you're looking for doesn't exist.</p>
+      <a
+        href="/"
+        className="text-primary hover:underline"
+      >
+        Go back home
+      </a>
+    </div>
+  );
+}
+```
+
+**Why this is required:**
+- Next.js 14+ with React 19 has stricter server/client component boundaries
+- The auto-generated `/_not-found` page fails during prerendering when wrapped in client providers (SessionProvider, ThemeProvider)
+- This explicit not-found.tsx gives Next.js a concrete page to prerender
+- Without this file, Vercel builds will fail with: `TypeError: Cannot read properties of null (reading 'useState')`
+
+### 1.8 Middleware
+
 Create a middleware at `src/middleware.ts`:
 
 ```typescript
@@ -542,6 +575,7 @@ src/
 │   │       └── events/route.ts
 │   ├── (auth)/
 │   │   └── signin/page.tsx
+│   ├── not-found.tsx          # REQUIRED - prevents Vercel prerender errors
 │   └── layout.tsx (updated with SessionProvider)
 ├── lib/
 │   ├── auth.ts
@@ -568,6 +602,7 @@ src/
 | Events empty for date range | Calendar has no events | Use a test calendar with known events |
 | Refresh token missing | Didn't request offline access | Add `access_type: 'offline'` to OAuth params |
 | Session not persisting | Cookie configuration | Check NEXTAUTH_URL matches your domain |
+| **Vercel build fails: `useState` is null** | Missing not-found.tsx with client providers | Create `src/app/not-found.tsx` (see section 1.7) - REQUIRED for Next.js 14+ with React 19 |
 
 ---
 
