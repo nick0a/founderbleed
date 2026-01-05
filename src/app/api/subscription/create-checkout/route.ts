@@ -9,12 +9,12 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
 
 // Stripe price IDs (configure these in your Stripe dashboard)
 const STRIPE_PRICES = {
-  starter_monthly: process.env.STRIPE_PRICE_STARTER_MONTHLY || 'price_starter_monthly',
-  starter_annual: process.env.STRIPE_PRICE_STARTER_ANNUAL || 'price_starter_annual',
-  pro_monthly: process.env.STRIPE_PRICE_PRO_MONTHLY || 'price_pro_monthly',
-  pro_annual: process.env.STRIPE_PRICE_PRO_ANNUAL || 'price_pro_annual',
-  enterprise_monthly: process.env.STRIPE_PRICE_ENTERPRISE_MONTHLY || 'price_enterprise_monthly',
-  enterprise_annual: process.env.STRIPE_PRICE_ENTERPRISE_ANNUAL || 'price_enterprise_annual',
+  starter_monthly: process.env.STRIPE_PRICE_ID_STARTER_MONTHLY || 'price_starter_monthly',
+  starter_annual: process.env.STRIPE_PRICE_ID_STARTER_ANNUAL || 'price_starter_annual',
+  pro_monthly: process.env.STRIPE_PRICE_ID_PRO_MONTHLY || 'price_pro_monthly',
+  pro_annual: process.env.STRIPE_PRICE_ID_PRO_ANNUAL || 'price_pro_annual',
+  enterprise_monthly: process.env.STRIPE_PRICE_ID_ENTERPRISE_MONTHLY || 'price_enterprise_monthly',
+  enterprise_annual: process.env.STRIPE_PRICE_ID_ENTERPRISE_ANNUAL || 'price_enterprise_annual',
 };
 
 export async function POST(request: NextRequest) {

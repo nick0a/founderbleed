@@ -13,12 +13,12 @@ const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
 // Map Stripe price IDs to our tiers
 const PRICE_TO_TIER: Record<string, 'starter' | 'pro' | 'enterprise'> = {
-  [process.env.STRIPE_PRICE_STARTER_MONTHLY || '']: 'starter',
-  [process.env.STRIPE_PRICE_STARTER_ANNUAL || '']: 'starter',
-  [process.env.STRIPE_PRICE_PRO_MONTHLY || '']: 'pro',
-  [process.env.STRIPE_PRICE_PRO_ANNUAL || '']: 'pro',
-  [process.env.STRIPE_PRICE_ENTERPRISE_MONTHLY || '']: 'enterprise',
-  [process.env.STRIPE_PRICE_ENTERPRISE_ANNUAL || '']: 'enterprise',
+  [process.env.STRIPE_PRICE_ID_STARTER_MONTHLY || '']: 'starter',
+  [process.env.STRIPE_PRICE_ID_STARTER_ANNUAL || '']: 'starter',
+  [process.env.STRIPE_PRICE_ID_PRO_MONTHLY || '']: 'pro',
+  [process.env.STRIPE_PRICE_ID_PRO_ANNUAL || '']: 'pro',
+  [process.env.STRIPE_PRICE_ID_ENTERPRISE_MONTHLY || '']: 'enterprise',
+  [process.env.STRIPE_PRICE_ID_ENTERPRISE_ANNUAL || '']: 'enterprise',
 };
 
 export async function POST(request: NextRequest) {
