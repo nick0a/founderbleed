@@ -285,3 +285,26 @@ export const planningSessions = pgTable("planning_sessions", {
   plannedEvents: jsonb("planned_events").default([]),
   status: text("status").default("active"),
 });
+
+export const scheduledAudits = pgTable("scheduled_audits", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
+  frequency: text("frequency"),
+  dayOfWeek: integer("day_of_week").default(6),
+  hour: integer("hour").default(3),
+  timezone: text("timezone").default("UTC"),
+  lastRunAt: timestamp("last_run_at"),
+  nextRunAt: timestamp("next_run_at"),
+  enabled: boolean("enabled").default(true),
+});
+
+export const notifications = pgTable("notifications", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
+  type: text("type"),
+  title: text("title").notNull(),
+  body: text("body"),
+  link: text("link"),
+  readAt: timestamp("read_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});

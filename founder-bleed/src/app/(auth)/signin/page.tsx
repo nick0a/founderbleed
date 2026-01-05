@@ -17,7 +17,10 @@ export default function SignInPage() {
           events. If you sign up for AI Planning, we will request additional
           permissions then.
         </p>
-        <Button className="mt-6 w-full" onClick={() => signIn("google")}>
+        <Button
+          className="mt-6 w-full"
+          onClick={() => signIn("google", { callbackUrl: "/post-auth" })}
+        >
           Sign in with Google
         </Button>
       </div>

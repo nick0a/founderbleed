@@ -17,7 +17,7 @@ export function CtaButton({ isLoggedIn }: { isLoggedIn: boolean }) {
   return (
     <Button
       className="h-12 px-8 text-sm font-semibold tracking-[0.2em]"
-      onClick={() => signIn("google")}
+      onClick={() => signIn("google", { callbackUrl: "/post-auth" })}
     >
       TRIAGE YOUR TIME
     </Button>
