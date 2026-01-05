@@ -225,3 +225,15 @@ export const reportAccessLog = pgTable('report_access_log', {
   accessedAt: timestamp('accessed_at').defaultNow(),
   convertedToSignup: boolean('converted_to_signup').default(false)
 });
+
+// Planning sessions
+export const planningSessions = pgTable('planning_sessions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  auditRunId: uuid('audit_run_id').references(() => auditRuns.id),
+  createdAt: timestamp('created_at').defaultNow(),
+  sessionType: text('session_type').default('weekly'), // daily, weekly
+  conversationHistory: jsonb('conversation_history').default([]),
+  plannedEvents: jsonb('planned_events').default([]), // events to push to calendar
+  status: text('status').default('active') // active, completed, cancelled
+});

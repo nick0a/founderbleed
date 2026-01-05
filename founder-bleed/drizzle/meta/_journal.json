@@ -29,6 +29,13 @@
       "when": 1767600953918,
       "tag": "0003_spotty_drax",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1767601474404,
+      "tag": "0004_square_clint_barton",
+      "breakpoints": true
     }
   ]
 }
