@@ -151,7 +151,7 @@ export async function runAudit({
         rawTitle,
         rawDescription,
         isAllDay,
-        raw.eventType
+        raw.eventType || undefined
       );
       if (leaveResult.isLeave) {
         leaveDaysDetected += daySpan;

@@ -22,6 +22,10 @@ export default async function ShareVerifyPage({
     .set({ emailVerified: true })
     .where(eq(reportAccessLog.id, access.id));
 
+  if (!access.sharedReportId) {
+    notFound();
+  }
+
   const sharedReport = await db.query.sharedReports.findFirst({
     where: eq(sharedReports.id, access.sharedReportId),
   });

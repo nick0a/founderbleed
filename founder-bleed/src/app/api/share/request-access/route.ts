@@ -43,10 +43,10 @@ export async function POST(request: NextRequest) {
 
   const verificationToken = randomUUID().replace(/-/g, "");
   const resendKey = process.env.RESEND_API_KEY;
-  const emailFrom = process.env.EMAIL_FROM;
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "";
+  const emailFrom = process.env.EMAIL_FROM || "notifications@founderbleed.com";
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL;
 
-  const shouldVerify = Boolean(resendKey && emailFrom && baseUrl);
+  const shouldVerify = Boolean(resendKey && baseUrl);
 
   await db.insert(reportAccessLog).values({
     id: randomUUID(),
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     accessedAt: new Date(),
   });
 
-  if (shouldVerify) {
+  if (shouldVerify && resendKey && baseUrl) {
     const resend = new Resend(resendKey);
     const verificationUrl = `${baseUrl}/share/verify/${verificationToken}`;
 

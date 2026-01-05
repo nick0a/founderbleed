@@ -223,8 +223,9 @@ export default function PlanningClient({
         throw new Error(data?.reply || "Planning request failed");
       }
 
-      if (data?.reply) {
-        setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
+      const reply = typeof data?.reply === "string" ? data.reply : "";
+      if (reply) {
+        setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
       }
 
       if (Array.isArray(data?.suggestions) && data?.suggestions.length > 0) {

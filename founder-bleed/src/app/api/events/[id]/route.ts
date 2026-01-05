@@ -16,12 +16,14 @@ const ALLOWED_TIERS = new Set([
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
+
+  const { id } = await params;
 
   const payload = (await request.json().catch(() => null)) as {
     finalTier?: string;
@@ -34,7 +36,7 @@ export async function PATCH(
   }
 
   const event = await db.query.events.findFirst({
-    where: eq(events.id, params.id),
+    where: eq(events.id, id),
   });
 
   if (!event) {
@@ -60,7 +62,7 @@ export async function PATCH(
     if (!ALLOWED_TIERS.has(normalized)) {
       return NextResponse.json({ error: "invalid tier" }, { status: 400 });
     }
-    updates.finalTier = normalized;
+    updates.finalTier = normalized as typeof events.$inferInsert["finalTier"];
   }
 
   if (typeof payload.reconciled === "boolean") {
@@ -77,7 +79,7 @@ export async function PATCH(
 
   updates.updatedAt = new Date();
 
-  await db.update(events).set(updates).where(eq(events.id, params.id));
+  await db.update(events).set(updates).where(eq(events.id, id));
 
   return NextResponse.json({ ok: true });
 }

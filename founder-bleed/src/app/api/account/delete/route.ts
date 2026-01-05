@@ -39,7 +39,7 @@ export async function DELETE(request: NextRequest) {
 
   if (subscription?.stripeSubscriptionId) {
     try {
-      await stripe.subscriptions.del(subscription.stripeSubscriptionId);
+      await stripe.subscriptions.cancel(subscription.stripeSubscriptionId);
     } catch (error) {
       console.error("Failed to cancel subscription", error);
     }

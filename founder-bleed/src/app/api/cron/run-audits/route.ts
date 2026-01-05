@@ -36,7 +36,7 @@ async function checkUserOnLeave(
       event.title || "",
       event.description || "",
       event.isAllDay,
-      event.eventType
+      event.eventType || undefined
     );
 
     if (leaveResult.isLeave) {

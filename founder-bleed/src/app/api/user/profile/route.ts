@@ -39,6 +39,11 @@ function toNumber(value: unknown): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function toNumericString(value: unknown): string | null {
+  const parsed = toNumber(value);
+  return parsed === null ? null : String(parsed);
+}
+
 export async function PATCH(request: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -92,35 +97,35 @@ export async function PATCH(request: NextRequest) {
   }
 
   if (payload.companyValuation !== undefined) {
-    updates.companyValuation = toNumber(payload.companyValuation);
+    updates.companyValuation = toNumericString(payload.companyValuation);
   }
 
   if (payload.equityPercentage !== undefined) {
-    updates.equityPercentage = toNumber(payload.equityPercentage);
+    updates.equityPercentage = toNumericString(payload.equityPercentage);
   }
 
   if (payload.vestingPeriodYears !== undefined) {
-    updates.vestingPeriodYears = toNumber(payload.vestingPeriodYears);
+    updates.vestingPeriodYears = toNumericString(payload.vestingPeriodYears);
   }
 
   if (payload.seniorEngineeringRate !== undefined) {
-    updates.seniorEngineeringRate = toNumber(payload.seniorEngineeringRate);
+    updates.seniorEngineeringRate = toNumericString(payload.seniorEngineeringRate);
   }
 
   if (payload.seniorBusinessRate !== undefined) {
-    updates.seniorBusinessRate = toNumber(payload.seniorBusinessRate);
+    updates.seniorBusinessRate = toNumericString(payload.seniorBusinessRate);
   }
 
   if (payload.juniorEngineeringRate !== undefined) {
-    updates.juniorEngineeringRate = toNumber(payload.juniorEngineeringRate);
+    updates.juniorEngineeringRate = toNumericString(payload.juniorEngineeringRate);
   }
 
   if (payload.juniorBusinessRate !== undefined) {
-    updates.juniorBusinessRate = toNumber(payload.juniorBusinessRate);
+    updates.juniorBusinessRate = toNumericString(payload.juniorBusinessRate);
   }
 
   if (payload.eaRate !== undefined) {
-    updates.eaRate = toNumber(payload.eaRate);
+    updates.eaRate = toNumericString(payload.eaRate);
   }
 
   if (payload.notificationPreferences) {

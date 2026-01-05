@@ -281,7 +281,7 @@ export default async function DashboardPage() {
         event.title,
         event.description,
         event.isAllDay,
-        event.eventType
+        event.eventType || undefined
       );
       const classification = leaveResult.isLeave
         ? null

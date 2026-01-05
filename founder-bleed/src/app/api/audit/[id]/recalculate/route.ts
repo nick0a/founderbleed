@@ -64,7 +64,7 @@ function buildUserRates(user: typeof users.$inferSelect): UserRates {
 
 export async function POST(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
 
@@ -72,7 +72,7 @@ export async function POST(
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const auditId = params.id;
+  const { id: auditId } = await params;
 
   const audit = await db.query.auditRuns.findFirst({
     where: eq(auditRuns.id, auditId),

@@ -329,13 +329,14 @@ export default function SettingsClient({
       | { key?: string }
       | null;
 
-    if (response.ok && data?.key) {
+    const maskedKey = data?.key;
+    if (response.ok && maskedKey) {
       setByokList((prev) => {
         const existing = prev.find((item) => item.provider === byokForm.provider);
         if (existing) {
           return prev.map((item) =>
             item.provider === byokForm.provider
-              ? { ...item, masked: data.key || item.masked, priority: byokForm.priority }
+              ? { ...item, masked: maskedKey, priority: byokForm.priority }
               : item
           );
         }
@@ -344,7 +345,7 @@ export default function SettingsClient({
           {
             id: crypto.randomUUID(),
             provider: byokForm.provider,
-            masked: data.key,
+            masked: maskedKey,
             priority: byokForm.priority,
           },
         ];

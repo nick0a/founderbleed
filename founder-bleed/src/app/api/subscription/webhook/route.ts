@@ -97,7 +97,8 @@ export async function POST(request: Request) {
       }
 
       const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-      const priceId = subscription.items.data[0]?.price.id;
+      const primaryItem = subscription.items.data[0];
+      const priceId = primaryItem?.price.id;
       const tierInfo = priceId ? resolveTierFromPrice(priceId) : null;
       const userId = session.metadata?.userId || null;
 
@@ -107,11 +108,11 @@ export async function POST(request: Request) {
         stripeSubscriptionId: subscription.id,
         tier: tierInfo?.tier || null,
         status: mapStatus(subscription.status),
-        currentPeriodStart: subscription.current_period_start
-          ? new Date(subscription.current_period_start * 1000)
+        currentPeriodStart: primaryItem?.current_period_start
+          ? new Date(primaryItem.current_period_start * 1000)
           : null,
-        currentPeriodEnd: subscription.current_period_end
-          ? new Date(subscription.current_period_end * 1000)
+        currentPeriodEnd: primaryItem?.current_period_end
+          ? new Date(primaryItem.current_period_end * 1000)
           : null,
       });
     }
@@ -121,7 +122,8 @@ export async function POST(request: Request) {
       event.type === "customer.subscription.deleted"
     ) {
       const subscription = event.data.object as Stripe.Subscription;
-      const priceId = subscription.items.data[0]?.price.id;
+      const primaryItem = subscription.items.data[0];
+      const priceId = primaryItem?.price.id;
       const tierInfo = priceId ? resolveTierFromPrice(priceId) : null;
 
       await upsertSubscription({
@@ -130,18 +132,22 @@ export async function POST(request: Request) {
         stripeSubscriptionId: subscription.id,
         tier: tierInfo?.tier || null,
         status: mapStatus(subscription.status),
-        currentPeriodStart: subscription.current_period_start
-          ? new Date(subscription.current_period_start * 1000)
+        currentPeriodStart: primaryItem?.current_period_start
+          ? new Date(primaryItem.current_period_start * 1000)
           : null,
-        currentPeriodEnd: subscription.current_period_end
-          ? new Date(subscription.current_period_end * 1000)
+        currentPeriodEnd: primaryItem?.current_period_end
+          ? new Date(primaryItem.current_period_end * 1000)
           : null,
       });
     }
 
     if (event.type === "invoice.payment_failed") {
       const invoice = event.data.object as Stripe.Invoice;
-      const subscriptionId = invoice.subscription as string | null;
+      const subscriptionRef = invoice.parent?.subscription_details?.subscription;
+      const subscriptionId =
+        typeof subscriptionRef === "string"
+          ? subscriptionRef
+          : subscriptionRef?.id || null;
       if (subscriptionId) {
         await db
           .update(subscriptions)

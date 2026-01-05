@@ -1,10 +1,8 @@
-import { randomUUID } from "crypto";
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { db } from "@/lib/db";
 import { calendarConnections } from "@/lib/db/schema";
-import { encrypt } from "@/lib/encryption";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: DrizzleAdapter(db),
@@ -35,10 +33,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async jwt({ token, account, user }) {
       if (account && user && account.access_token) {
+        const userId = user.id ?? token.sub;
+        if (!userId) {
+          return token;
+        }
+
+        const { encrypt } = await import("@/lib/encryption");
         const accessToken = encrypt(account.access_token);
-        const refreshToken = account.refresh_token
-          ? encrypt(account.refresh_token)
-          : null;
+        const refreshToken = account.refresh_token ? encrypt(account.refresh_token) : null;
 
         token.accessToken = accessToken;
         token.refreshToken = refreshToken;
@@ -52,8 +54,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         await db
           .insert(calendarConnections)
           .values({
-            id: randomUUID(),
-            userId: user.id,
+            id: globalThis.crypto.randomUUID(),
+            userId,
             provider: "google",
             accessToken,
             refreshToken,
