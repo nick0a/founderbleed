@@ -124,7 +124,8 @@ export async function POST(request: NextRequest) {
         isLeave: leaveResult.isLeave,
         leaveDetectionMethod: leaveResult.method,
         leaveConfidence: leaveResult.confidence,
-        planningScore: eventPlanningScore
+        planningScore: eventPlanningScore,
+        eventCategory: classification?.eventCategory || 'work' // Auto-classify travel, leisure, exercise
       });
     }
 

@@ -35,6 +35,35 @@ export const ENGINEERING_AREAS = ['Development', 'Design', 'Data/Analytics'];
 export type Tier = 'unique' | 'founder' | 'senior' | 'junior' | 'ea';
 export type Confidence = 'high' | 'medium' | 'low';
 export type Vertical = 'engineering' | 'business' | 'universal';
+export type EventCategory = 'work' | 'leisure' | 'exercise' | 'travel';
+
+// Event Category Keywords - patterns that indicate non-work events
+export const CATEGORY_KEYWORDS: Record<EventCategory, string[]> = {
+  travel: [
+    'flight', 'qf ', 'va ', 'jq ', 'sq ', 'qr ', 'ek ', 'aa ', 'ua ', 'dl ',
+    'hotel', 'stay at', 'airbnb', 'accommodation', 'check-in', 'check-out',
+    'airport', 'terminal', 'boarding', 'layover', 'transit',
+    'ibis', 'hilton', 'marriott', 'hyatt', 'sheraton', 'novotel', 'mercure',
+    'booking.com', 'expedia', 'agoda', 'hotels.com'
+  ],
+  leisure: [
+    'dinner', 'lunch', 'breakfast', 'brunch', 'restaurant', 'cafe', 'coffee',
+    'movie', 'cinema', 'concert', 'show', 'theater', 'theatre',
+    'party', 'birthday', 'celebration', 'wedding', 'anniversary',
+    'vacation', 'holiday', 'personal', 'family', 'friend',
+    'reservation at', 'table for', 'booking at',
+    'spa', 'massage', 'salon', 'haircut', 'beauty',
+    'shopping', 'mall', 'store'
+  ],
+  exercise: [
+    'gym', 'workout', 'training', 'fitness', 'exercise',
+    'run', 'running', 'jog', 'jogging', 'walk', 'walking', 'hike', 'hiking',
+    'yoga', 'pilates', 'crossfit', 'spin', 'cycling', 'bike', 'swim', 'swimming',
+    'tennis', 'golf', 'basketball', 'soccer', 'football', 'sports',
+    'peloton', 'orange theory', 'f45', 'equinox', 'anytime fitness'
+  ],
+  work: [] // Default - everything else is work
+};
 
 export interface ClassificationResult {
   suggestedTier: Tier;
@@ -42,6 +71,7 @@ export interface ClassificationResult {
   vertical: Vertical;
   confidence: Confidence;
   keywordsMatched: string[];
+  eventCategory: EventCategory;
 }
 
 export function classifyEvent(
@@ -100,11 +130,43 @@ export function classifyEvent(
     suggestedTier = 'unique';
   }
 
+  // Determine event category (work vs non-work)
+  let eventCategory: EventCategory = 'work'; // default
+  
+  // Check travel keywords first (highest priority for travel-related events)
+  for (const keyword of CATEGORY_KEYWORDS.travel) {
+    if (text.includes(keyword.toLowerCase())) {
+      eventCategory = 'travel';
+      break;
+    }
+  }
+  
+  // Check exercise keywords
+  if (eventCategory === 'work') {
+    for (const keyword of CATEGORY_KEYWORDS.exercise) {
+      if (text.includes(keyword.toLowerCase())) {
+        eventCategory = 'exercise';
+        break;
+      }
+    }
+  }
+  
+  // Check leisure keywords
+  if (eventCategory === 'work') {
+    for (const keyword of CATEGORY_KEYWORDS.leisure) {
+      if (text.includes(keyword.toLowerCase())) {
+        eventCategory = 'leisure';
+        break;
+      }
+    }
+  }
+
   return {
     suggestedTier,
     businessArea,
     vertical,
     confidence,
-    keywordsMatched: matchedKeywords
+    keywordsMatched: matchedKeywords,
+    eventCategory
   };
 }
