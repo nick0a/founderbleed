@@ -9,6 +9,7 @@ import { calculateMetrics } from '@/lib/metrics';
 import { calculatePlanningScore, calculateEventPlanningScore } from '@/lib/planning-score';
 import { encrypt, decrypt } from '@/lib/encryption';
 import { eq } from 'drizzle-orm';
+import { requireAuditQuota, markFreeAuditUsed, getActiveSubscription } from '@/lib/subscription';
 
 interface TeamComposition {
   founder?: number;
@@ -35,6 +36,16 @@ export async function POST(request: NextRequest) {
 
   if (!user) {
     return NextResponse.json({ error: 'User not found' }, { status: 404 });
+  }
+
+  // Check audit quota (free users only get 1 audit)
+  // Pass user email to enable Stripe sync if needed
+  const quotaResult = await requireAuditQuota(session.user.id, session.user.email ?? undefined);
+  if (!quotaResult.allowed) {
+    return NextResponse.json(
+      { error: 'free_audit_used', message: 'Free audit already used. Upgrade to run more audits.' },
+      { status: 403 }
+    );
   }
 
   // Check solo founder
@@ -183,6 +194,12 @@ export async function POST(request: NextRequest) {
         leaveHoursExcluded: String(processedEvents.filter(e => e.isLeave).reduce((sum, e) => sum + e.durationMinutes / 60, 0))
       })
       .where(eq(auditRuns.id, auditRun.id));
+
+    // Mark free audit as used (only if user doesn't have active subscription)
+    const subscription = await getActiveSubscription(session.user.id);
+    if (!subscription) {
+      await markFreeAuditUsed(session.user.id);
+    }
 
     return NextResponse.json({
       auditId: auditRun.id,

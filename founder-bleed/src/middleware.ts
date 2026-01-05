@@ -8,7 +8,7 @@ export default auth((req) => {
   const isLoggedIn = !!req.auth;
   const isPublicRoute = ['/signin', '/error', '/'].some(path =>
     req.nextUrl.pathname === path
-  );
+  ) || req.nextUrl.pathname.startsWith('/share/');
 
   if (!isLoggedIn && !isPublicRoute) {
     return NextResponse.redirect(new URL('/signin', req.url));

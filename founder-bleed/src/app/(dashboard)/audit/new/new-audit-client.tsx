@@ -127,6 +127,9 @@ export default function NewAuditClient() {
               <Button variant="outline" size="sm" onClick={() => setPreset(90)}>
                 Last 3 months
               </Button>
+              <Button variant="outline" size="sm" onClick={() => setPreset(365)}>
+                Last 1 year
+              </Button>
             </div>
           </div>
 
