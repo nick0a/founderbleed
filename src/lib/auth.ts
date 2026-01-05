@@ -13,6 +13,8 @@ import {
 import { eq } from 'drizzle-orm';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  debug: process.env.NODE_ENV === 'development',
+  trustHost: true,
   adapter: DrizzleAdapter(db, {
     usersTable: users,
     accountsTable: accounts,
@@ -40,8 +42,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return session;
     },
+    async signIn() {
+      // Allow sign-in to proceed - calendar connection stored in signIn event
+      return true;
+    },
+  },
+  events: {
     async signIn({ user, account }) {
-      // Store calendar connection with encrypted tokens
+      // Store calendar connection with encrypted tokens (runs after user is created)
       if (account && user.id && account.access_token) {
         try {
           const encryptedAccessToken = encrypt(account.access_token);
@@ -89,7 +97,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           // Don't block sign-in if this fails
         }
       }
-      return true;
     },
   },
   pages: {
