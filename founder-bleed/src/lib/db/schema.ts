@@ -6,20 +6,20 @@ export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   email: text('email').unique().notNull(),
   name: text('name'),
-  username: text('username'), // Editable display name
+  username: text('username'),
   emailVerified: timestamp("emailVerified", { mode: "date" }),
   image: text("image"),
   createdAt: timestamp('created_at').defaultNow(),
 
   // Compensation
   salaryAnnual: numeric('salary_annual'),
-  salaryInputMode: text('salary_input_mode').default('annual'), // 'annual' | 'hourly'
+  salaryInputMode: text('salary_input_mode').default('annual'),
   companyValuation: numeric('company_valuation'),
   equityPercentage: numeric('equity_percentage'),
   vestingPeriodYears: numeric('vesting_period_years'),
   currency: text('currency').default('USD'),
 
-  // Tier rates (annual)
+  // Tier rates
   seniorEngineeringRate: numeric('senior_engineering_rate').default('100000'),
   seniorBusinessRate: numeric('senior_business_rate').default('100000'),
   juniorEngineeringRate: numeric('junior_engineering_rate').default('50000'),
@@ -97,8 +97,8 @@ export const calendarConnections = pgTable('calendar_connections', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
   provider: text('provider').default('google'),
-  accessToken: text('access_token').notNull(), // encrypted
-  refreshToken: text('refresh_token'), // encrypted
+  accessToken: text('access_token').notNull(),
+  refreshToken: text('refresh_token'),
   tokenExpiresAt: timestamp('token_expires_at'),
   scopes: text('scopes').array(),
   hasWriteAccess: boolean('has_write_access').default(false),
@@ -116,13 +116,13 @@ export const auditRuns = pgTable('audit_runs', {
   calendarsIncluded: text('calendars_included').array(),
   exclusionsUsed: text('exclusions_used').array(),
   computedMetrics: jsonb('computed_metrics'),
-  planningScore: integer('planning_score'), // 0-100
-  planningAssessment: text('planning_assessment'), // markdown
-  status: text('status').default('pending'), // pending, processing, completed, failed
+  planningScore: integer('planning_score'),
+  planningAssessment: text('planning_assessment'),
+  status: text('status').default('pending'),
   algorithmVersion: text('algorithm_version').default('1.7').notNull(),
   leaveDaysDetected: integer('leave_days_detected').default(0),
   leaveHoursExcluded: numeric('leave_hours_excluded').default('0'),
-  frequency: text('frequency').default('manual') // manual, weekly, monthly, annual
+  frequency: text('frequency').default('manual')
 });
 
 // Events
@@ -135,29 +135,22 @@ export const events = pgTable('events', {
   durationMinutes: integer('duration_minutes'),
   isAllDay: boolean('is_all_day').default(false),
   calendarId: text('calendar_id'),
-  title: text('title'), // encrypted
-  description: text('description'), // encrypted
+  title: text('title'),
+  description: text('description'),
   attendeesCount: integer('attendees_count').default(0),
   hasMeetLink: boolean('has_meet_link').default(false),
   isRecurring: boolean('is_recurring').default(false),
-
-  // Classification
-  suggestedTier: text('suggested_tier'), // unique, founder, senior, junior, ea
+  suggestedTier: text('suggested_tier'),
   finalTier: text('final_tier'),
   reconciled: boolean('reconciled').default(false),
   businessArea: text('business_area'),
-  vertical: text('vertical'), // engineering, business
-  confidenceScore: text('confidence_score'), // high, medium, low
+  vertical: text('vertical'),
+  confidenceScore: text('confidence_score'),
   keywordsMatched: text('keywords_matched').array(),
-
-  // Leave detection
   isLeave: boolean('is_leave').default(false),
   leaveDetectionMethod: text('leave_detection_method'),
-  leaveConfidence: text('leave_confidence'), // high, medium, low
-
-  // Planning
-  planningScore: integer('planning_score'), // 0-100 per event
-
+  leaveConfidence: text('leave_confidence'),
+  planningScore: integer('planning_score'),
   createdAt: timestamp('created_at').defaultNow()
 });
 
@@ -166,15 +159,15 @@ export const roleRecommendations = pgTable('role_recommendations', {
   id: uuid('id').primaryKey().defaultRandom(),
   auditRunId: uuid('audit_run_id').references(() => auditRuns.id, { onDelete: 'cascade' }),
   roleTitle: text('role_title').notNull(),
-  roleTier: text('role_tier').notNull(), // senior, junior, ea
-  vertical: text('vertical'), // engineering, business, null for EA
+  roleTier: text('role_tier').notNull(),
+  vertical: text('vertical'),
   businessArea: text('business_area').notNull(),
   hoursPerWeek: numeric('hours_per_week').notNull(),
   costWeekly: numeric('cost_weekly').notNull(),
   costMonthly: numeric('cost_monthly').notNull(),
   costAnnual: numeric('cost_annual').notNull(),
-  jdText: text('jd_text'), // markdown
-  tasksList: jsonb('tasks_list'), // [{task: string, hoursPerWeek: number}]
+  jdText: text('jd_text'),
+  tasksList: jsonb('tasks_list'),
   createdAt: timestamp('created_at').defaultNow()
 });
 
@@ -184,11 +177,11 @@ export const subscriptions = pgTable('subscriptions', {
   userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
   stripeCustomerId: text('stripe_customer_id'),
   stripeSubscriptionId: text('stripe_subscription_id'),
-  tier: text('tier'), // 'starter', 'pro', 'enterprise'
-  status: text('status'), // 'active', 'cancelled', 'past_due', 'trialing'
+  tier: text('tier'),
+  status: text('status'),
   currentPeriodStart: timestamp('current_period_start'),
   currentPeriodEnd: timestamp('current_period_end'),
-  llmBudgetCents: integer('llm_budget_cents'), // monthly budget
+  llmBudgetCents: integer('llm_budget_cents'),
   llmSpentCents: integer('llm_spent_cents').default(0),
   createdAt: timestamp('created_at').defaultNow(),
   cancelledAt: timestamp('cancelled_at')
@@ -198,24 +191,24 @@ export const subscriptions = pgTable('subscriptions', {
 export const byokKeys = pgTable('byok_keys', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
-  provider: text('provider'), // 'openai', 'anthropic', 'google'
+  provider: text('provider'),
   apiKeyEncrypted: text('api_key_encrypted').notNull(),
-  priority: text('priority').default('budget_first'), // 'byok_first', 'budget_first', 'byok_premium_only'
+  priority: text('priority').default('budget_first'),
   createdAt: timestamp('created_at').defaultNow()
 });
 
-// Shared reports (email-gated)
+// Shared reports
 export const sharedReports = pgTable('shared_reports', {
   id: uuid('id').primaryKey().defaultRandom(),
   auditRunId: uuid('audit_run_id').references(() => auditRuns.id, { onDelete: 'cascade' }),
   shareToken: text('share_token').unique().notNull(),
   createdAt: timestamp('created_at').defaultNow(),
-  expiresAt: timestamp('expires_at'), // 30 days from creation
+  expiresAt: timestamp('expires_at'),
   ownerUserId: uuid('owner_user_id').references(() => users.id),
   revokedAt: timestamp('revoked_at')
 });
 
-// Report access log (lead capture)
+// Report access log
 export const reportAccessLog = pgTable('report_access_log', {
   id: uuid('id').primaryKey().defaultRandom(),
   sharedReportId: uuid('shared_report_id').references(() => sharedReports.id, { onDelete: 'cascade' }),
@@ -232,8 +225,33 @@ export const planningSessions = pgTable('planning_sessions', {
   userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
   auditRunId: uuid('audit_run_id').references(() => auditRuns.id),
   createdAt: timestamp('created_at').defaultNow(),
-  sessionType: text('session_type').default('weekly'), // daily, weekly
+  sessionType: text('session_type').default('weekly'),
   conversationHistory: jsonb('conversation_history').default([]),
-  plannedEvents: jsonb('planned_events').default([]), // events to push to calendar
-  status: text('status').default('active') // active, completed, cancelled
+  plannedEvents: jsonb('planned_events').default([]),
+  status: text('status').default('active')
+});
+
+// Scheduled Audits
+export const scheduledAudits = pgTable('scheduled_audits', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  frequency: text('frequency'),
+  dayOfWeek: integer('day_of_week').default(6),
+  hour: integer('hour').default(3),
+  timezone: text('timezone').default('UTC'),
+  lastRunAt: timestamp('last_run_at'),
+  nextRunAt: timestamp('next_run_at'),
+  enabled: boolean('enabled').default(true)
+});
+
+// Notifications
+export const notifications = pgTable('notifications', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  type: text('type'),
+  title: text('title').notNull(),
+  body: text('body'),
+  link: text('link'),
+  readAt: timestamp('read_at'),
+  createdAt: timestamp('created_at').defaultNow()
 });
