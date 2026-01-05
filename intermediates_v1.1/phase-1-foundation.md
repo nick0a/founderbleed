@@ -21,14 +21,24 @@ Build the authentication system and calendar connection infrastructure. This pha
 
 Create the core tables in `src/lib/db/schema.ts`:
 
-```typescript
-import { pgTable, uuid, text, timestamp, numeric, boolean, jsonb, integer } from 'drizzle-orm/pg-core';
+**IMPORTANT - NextAuth Drizzle Adapter Table Naming:**
+The NextAuth Drizzle adapter (`@auth/drizzle-adapter`) expects tables with **singular names** (`user`, `account`, `session`, `verificationToken`). Using plural names (`users`, `accounts`, etc.) will cause authentication failures. The adapter looks for these exact table names.
 
-// Users table
-export const users = pgTable('users', {
+```typescript
+import { pgTable, uuid, text, timestamp, numeric, boolean, jsonb, integer, primaryKey } from 'drizzle-orm/pg-core';
+import type { AdapterAccount } from 'next-auth/adapters';
+
+// ============================================================
+// NextAuth Required Tables (MUST use singular names)
+// ============================================================
+
+// User table - NextAuth core table (MUST be named 'user', not 'users')
+export const users = pgTable('user', {
   id: uuid('id').primaryKey().defaultRandom(),
   email: text('email').unique().notNull(),
+  emailVerified: timestamp('emailVerified', { mode: 'date' }),
   name: text('name'),
+  image: text('image'),
   username: text('username'), // Editable display name for personalized reports
   createdAt: timestamp('created_at').defaultNow(),
 
@@ -69,7 +79,46 @@ export const users = pgTable('users', {
   })
 });
 
-// Calendar connections
+// Account table - NextAuth OAuth accounts (MUST be named 'account', not 'accounts')
+export const accounts = pgTable('account', {
+  userId: uuid('userId').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  type: text('type').$type<AdapterAccount['type']>().notNull(),
+  provider: text('provider').notNull(),
+  providerAccountId: text('providerAccountId').notNull(),
+  refresh_token: text('refresh_token'),
+  access_token: text('access_token'),
+  expires_at: integer('expires_at'),
+  token_type: text('token_type'),
+  scope: text('scope'),
+  id_token: text('id_token'),
+  session_state: text('session_state'),
+}, (account) => ({
+  compoundKey: primaryKey({ columns: [account.provider, account.providerAccountId] }),
+}));
+
+// Session table - NextAuth sessions (MUST be named 'session', not 'sessions')
+// Note: Only required if using database sessions (strategy: 'database')
+// With JWT strategy (recommended), this table is optional but good to have
+export const sessions = pgTable('session', {
+  sessionToken: text('sessionToken').primaryKey(),
+  userId: uuid('userId').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  expires: timestamp('expires', { mode: 'date' }).notNull(),
+});
+
+// Verification Token table - NextAuth email verification (MUST be named 'verificationToken')
+export const verificationTokens = pgTable('verificationToken', {
+  identifier: text('identifier').notNull(),
+  token: text('token').notNull(),
+  expires: timestamp('expires', { mode: 'date' }).notNull(),
+}, (vt) => ({
+  compoundKey: primaryKey({ columns: [vt.identifier, vt.token] }),
+}));
+
+// ============================================================
+// Application-specific Tables
+// ============================================================
+
+// Calendar connections - stores encrypted OAuth tokens for calendar access
 export const calendarConnections = pgTable('calendar_connections', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
@@ -83,6 +132,14 @@ export const calendarConnections = pgTable('calendar_connections', {
   revokedAt: timestamp('revoked_at')
 });
 ```
+
+**Why Singular Table Names?**
+The `@auth/drizzle-adapter` package has hardcoded table name expectations. Using plural names will result in:
+- "relation 'users' does not exist" errors during OAuth
+- Authentication failures after successful Google consent
+- Silent session creation failures
+
+The variable names (`users`, `accounts`, `sessions`, `verificationTokens`) can be plural for TypeScript convenience, but the database table names passed to `pgTable()` must be singular.
 
 Run the migration:
 ```bash

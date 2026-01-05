@@ -18,7 +18,7 @@ import type { AdapterAccountType } from 'next-auth/adapters';
 // NextAuth Required Tables
 // ============================================
 
-export const users = pgTable('users', {
+export const users = pgTable('user', {
   id: uuid('id').primaryKey().defaultRandom(),
   email: text('email').unique().notNull(),
   emailVerified: timestamp('email_verified', { mode: 'date' }),
@@ -66,7 +66,7 @@ export const users = pgTable('users', {
 });
 
 export const accounts = pgTable(
-  'accounts',
+  'account',
   {
     userId: uuid('user_id')
       .notNull()
@@ -87,7 +87,7 @@ export const accounts = pgTable(
   ]
 );
 
-export const sessions = pgTable('sessions', {
+export const sessions = pgTable('session', {
   sessionToken: text('session_token').primaryKey(),
   userId: uuid('user_id')
     .notNull()
@@ -96,7 +96,7 @@ export const sessions = pgTable('sessions', {
 });
 
 export const verificationTokens = pgTable(
-  'verification_tokens',
+  'verificationToken',
   {
     identifier: text('identifier').notNull(),
     token: text('token').notNull(),
