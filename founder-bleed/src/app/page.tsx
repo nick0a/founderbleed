@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 
@@ -34,7 +36,9 @@ export default function Home() {
             quantified by cost, arbitrage, and efficiency.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Button>Run my audit</Button>
+            <Button asChild>
+              <Link href="/processing">Run my audit</Link>
+            </Button>
             <Button variant="outline">View methodology</Button>
           </div>
         </section>

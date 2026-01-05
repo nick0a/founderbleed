@@ -371,36 +371,44 @@ export default function ResultsClient({
       ea: metrics.hoursByTier.ea,
     };
 
-    if (Number(teamComposition?.ea || 0) > 0) {
+    const seniorCount =
+      Number(teamComposition?.seniorEngineering || 0) +
+      Number(teamComposition?.seniorBusiness || 0);
+    const juniorCount =
+      Number(teamComposition?.juniorEngineering || 0) +
+      Number(teamComposition?.juniorBusiness || 0);
+    const eaCount = Number(teamComposition?.ea || 0);
+
+    if (eaCount > 0) {
       const hours = Math.max(0, hourly.ea * weeklyMultiplier);
       const savings = formatCurrency((rates.eaRate * (hours / 40)) / 12) || "$0";
       rows.push({
         label: "EA",
-        count: Number(teamComposition.ea || 0),
+        count: eaCount,
         tasks: "Scheduling, expenses, admin requests",
         savings: `${formatHours(hours)} hrs/week, ${savings}/month`,
       });
     }
 
-    if (Number(teamComposition?.senior || 0) > 0) {
+    if (seniorCount > 0) {
       const hours = Math.max(0, hourly.senior * weeklyMultiplier);
       const monthly =
         (rates.seniorBusinessRate * (hours / 40)) / 12;
       rows.push({
         label: "Senior",
-        count: Number(teamComposition.senior || 0),
+        count: seniorCount,
         tasks: "Project planning, execution oversight",
         savings: `${formatHours(hours)} hrs/week, ${formatCurrency(monthly) || "$0"}/month`,
       });
     }
 
-    if (Number(teamComposition?.junior || 0) > 0) {
+    if (juniorCount > 0) {
       const hours = Math.max(0, hourly.junior * weeklyMultiplier);
       const monthly =
         (rates.juniorBusinessRate * (hours / 40)) / 12;
       rows.push({
         label: "Junior",
-        count: Number(teamComposition.junior || 0),
+        count: juniorCount,
         tasks: "Documentation, follow-ups, QA checks",
         savings: `${formatHours(hours)} hrs/week, ${formatCurrency(monthly) || "$0"}/month`,
       });

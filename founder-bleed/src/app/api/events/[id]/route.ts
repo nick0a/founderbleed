@@ -26,6 +26,7 @@ export async function PATCH(
   const payload = (await request.json().catch(() => null)) as {
     finalTier?: string;
     reconciled?: boolean;
+    isLeave?: boolean;
   } | null;
 
   if (!payload) {
@@ -64,6 +65,10 @@ export async function PATCH(
 
   if (typeof payload.reconciled === "boolean") {
     updates.reconciled = payload.reconciled;
+  }
+
+  if (typeof payload.isLeave === "boolean") {
+    updates.isLeave = payload.isLeave;
   }
 
   if (Object.keys(updates).length === 0) {
