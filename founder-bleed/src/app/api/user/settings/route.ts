@@ -12,6 +12,13 @@ const DEFAULT_CALENDAR_SETTINGS = {
   timezone: 'Asia/Singapore',
 };
 
+// Default notification preferences
+const DEFAULT_NOTIFICATION_PREFERENCES = {
+  email_audit_ready: true,
+  email_weekly_digest: true,
+  in_app_audit_ready: true,
+};
+
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
@@ -49,6 +56,8 @@ export async function GET() {
       eaRate: true,
       // Calendar settings
       settings: true,
+      // Notification preferences
+      notificationPreferences: true,
     }
   });
 
@@ -58,9 +67,16 @@ export async function GET() {
     ...(user?.settings as Record<string, unknown> || {}),
   };
 
+  // Merge with defaults for notification preferences
+  const notificationPreferences = {
+    ...DEFAULT_NOTIFICATION_PREFERENCES,
+    ...(user?.notificationPreferences as Record<string, boolean> || {}),
+  };
+
   return NextResponse.json({
     user,
     calendarSettings,
+    notificationPreferences,
   });
 }
 
@@ -75,7 +91,7 @@ export async function PUT(request: Request) {
   // Get current settings to merge calendar settings
   const currentUser = await db.query.users.findFirst({
     where: eq(users.id, session.user.id),
-    columns: { settings: true },
+    columns: { settings: true, notificationPreferences: true },
   });
 
   // Merge calendar settings with existing settings
@@ -84,34 +100,57 @@ export async function PUT(request: Request) {
     ...(data.calendarSettings || {}),
   };
 
+  // Merge notification preferences
+  const updatedNotificationPreferences = {
+    ...(currentUser?.notificationPreferences as Record<string, boolean> || {}),
+    ...(data.notificationPreferences || {}),
+  };
+
+  // Build update object - only include fields that are provided
+  const updateData: Record<string, unknown> = {
+    // Calendar settings (merged)
+    settings: updatedSettings,
+    // Notification preferences (merged)
+    notificationPreferences: updatedNotificationPreferences,
+  };
+
+  // Account info (only update if provided)
+  if (data.name !== undefined) updateData.name = data.name;
+  if (data.username !== undefined) updateData.username = data.username;
+
+  // Compensation
+  if (data.salaryAnnual !== undefined) updateData.salaryAnnual = data.salaryAnnual || null;
+  if (data.salaryInputMode !== undefined) updateData.salaryInputMode = data.salaryInputMode || 'annual';
+  if (data.currency !== undefined) updateData.currency = data.currency || 'USD';
+
+  // Team composition
+  if (data.teamComposition !== undefined) updateData.teamComposition = data.teamComposition || {};
+
+  // Equity
+  if (data.companyValuation !== undefined) updateData.companyValuation = data.companyValuation || null;
+  if (data.equityPercentage !== undefined) updateData.equityPercentage = data.equityPercentage || null;
+  if (data.vestingPeriodYears !== undefined) updateData.vestingPeriodYears = data.vestingPeriodYears || '4';
+
+  // Founder tier rates
+  if (data.founderUniversalRate !== undefined) updateData.founderUniversalRate = data.founderUniversalRate || '200000';
+  if (data.founderEngineeringRate !== undefined) updateData.founderEngineeringRate = data.founderEngineeringRate || '180000';
+  if (data.founderBusinessRate !== undefined) updateData.founderBusinessRate = data.founderBusinessRate || '160000';
+
+  // Senior tier rates
+  if (data.seniorUniversalRate !== undefined) updateData.seniorUniversalRate = data.seniorUniversalRate || '120000';
+  if (data.seniorEngineeringRate !== undefined) updateData.seniorEngineeringRate = data.seniorEngineeringRate || '100000';
+  if (data.seniorBusinessRate !== undefined) updateData.seniorBusinessRate = data.seniorBusinessRate || '80000';
+
+  // Junior tier rates
+  if (data.juniorUniversalRate !== undefined) updateData.juniorUniversalRate = data.juniorUniversalRate || '50000';
+  if (data.juniorEngineeringRate !== undefined) updateData.juniorEngineeringRate = data.juniorEngineeringRate || '40000';
+  if (data.juniorBusinessRate !== undefined) updateData.juniorBusinessRate = data.juniorBusinessRate || '50000';
+
+  // Support tier rates
+  if (data.eaRate !== undefined) updateData.eaRate = data.eaRate || '25000';
+
   await db.update(users)
-    .set({
-      salaryAnnual: data.salaryAnnual || null,
-      salaryInputMode: data.salaryInputMode || 'annual',
-      currency: data.currency || 'USD',
-      // Team composition
-      teamComposition: data.teamComposition || {},
-      // Equity
-      companyValuation: data.companyValuation || null,
-      equityPercentage: data.equityPercentage || null,
-      vestingPeriodYears: data.vestingPeriodYears || '4',
-      // Founder tier rates
-      founderUniversalRate: data.founderUniversalRate || '200000',
-      founderEngineeringRate: data.founderEngineeringRate || '180000',
-      founderBusinessRate: data.founderBusinessRate || '160000',
-      // Senior tier rates
-      seniorUniversalRate: data.seniorUniversalRate || '120000',
-      seniorEngineeringRate: data.seniorEngineeringRate || '100000',
-      seniorBusinessRate: data.seniorBusinessRate || '80000',
-      // Junior tier rates
-      juniorUniversalRate: data.juniorUniversalRate || '50000',
-      juniorEngineeringRate: data.juniorEngineeringRate || '40000',
-      juniorBusinessRate: data.juniorBusinessRate || '50000',
-      // Support tier rates
-      eaRate: data.eaRate || '25000',
-      // Calendar settings (merged)
-      settings: updatedSettings,
-    })
+    .set(updateData)
     .where(eq(users.id, session.user.id));
 
   return NextResponse.json({ success: true });

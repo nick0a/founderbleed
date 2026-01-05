@@ -22,6 +22,13 @@
       "when": 1767650228243,
       "tag": "0002_busy_lorna_dane",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1767652660484,
+      "tag": "0003_large_night_thrasher",
+      "breakpoints": true
     }
   ]
 }

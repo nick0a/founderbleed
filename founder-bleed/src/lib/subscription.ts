@@ -3,7 +3,7 @@ import { subscriptions, users } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { stripe } from '@/lib/stripe';
 
-export type SubscriptionTier = 'starter' | 'pro' | 'enterprise';
+export type SubscriptionTier = 'starter' | 'team' | 'pro';
 export type SubscriptionStatus = 'active' | 'cancelled' | 'past_due' | 'trialing';
 
 export interface Subscription {
@@ -22,8 +22,8 @@ export interface Subscription {
 // LLM budget by tier (in cents)
 export const LLM_BUDGETS: Record<SubscriptionTier, number> = {
   starter: 300,    // $3.00/month
-  pro: 750,        // $7.50/month
-  enterprise: 1350 // $13.50/month
+  team: 750,       // $7.50/month
+  pro: 1350        // $13.50/month
 };
 
 // Subscription prices
@@ -32,11 +32,11 @@ export const SUBSCRIPTION_PRICES = {
     monthly: 2000,  // $20/month
     annual: 20000,  // $200/year (2 months free)
   },
-  pro: {
+  team: {
     monthly: 5000,  // $50/month
     annual: 50000,  // $500/year (2 months free)
   },
-  enterprise: {
+  pro: {
     monthly: 9000,  // $90/month
     annual: 90000,  // $900/year (2 months free)
   },
@@ -182,7 +182,7 @@ export async function requireSubscription(
   }
 
   if (minTier && subscription.tier) {
-    const tierOrder: Record<SubscriptionTier, number> = { starter: 1, pro: 2, enterprise: 3 };
+    const tierOrder: Record<SubscriptionTier, number> = { starter: 1, team: 2, pro: 3 };
     if (tierOrder[subscription.tier] < tierOrder[minTier]) {
       return { allowed: false, reason: 'upgrade_required' };
     }

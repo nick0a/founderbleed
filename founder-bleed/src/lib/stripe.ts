@@ -9,11 +9,12 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_place
 });
 
 export function getPriceId(tier: string, billingPeriod: 'monthly' | 'annual'): string | null {
-  // Map tier names to env var names (enterprise -> team for backwards compatibility)
+  // Map tier names to env var names
+  // Tiers: starter ($20/200), team ($50/500), pro ($90/900)
   const tierMap: Record<string, string> = {
     'starter': 'STARTER',
+    'team': 'TEAM',
     'pro': 'PRO',
-    'enterprise': 'TEAM', // Enterprise tier uses TEAM price IDs
   };
   const envTier = tierMap[tier.toLowerCase()] || tier.toUpperCase();
   const envKey = `STRIPE_PRICE_ID_${envTier}_${billingPeriod.toUpperCase()}`;

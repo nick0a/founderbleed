@@ -265,3 +265,23 @@ export const notifications = pgTable('notifications', {
   readAt: timestamp('read_at'),
   createdAt: timestamp('created_at').defaultNow(),
 });
+
+// Contacts (for leaderboard / comparison features)
+export const contacts = pgTable('contacts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  contactUserId: uuid('contact_user_id').references(() => users.id),
+  contactEmail: text('contact_email'), // if not yet registered
+  status: text('status').default('pending'), // 'pending', 'accepted', 'declined'
+  invitedAt: timestamp('invited_at').defaultNow(),
+  acceptedAt: timestamp('accepted_at'),
+});
+
+// User privacy settings for contacts/leaderboard
+export const userPrivacySettings = pgTable('user_privacy_settings', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).unique(),
+  shareScores: boolean('share_scores').default(true),
+  anonymousMode: boolean('anonymous_mode').default(false),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});

@@ -5,7 +5,7 @@ import { db } from '@/lib/db';
 import { subscriptions } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
-export async function GET(request: NextRequest) {
+async function createPortalSession() {
   const session = await auth();
 
   if (!session?.user?.id) {
@@ -26,10 +26,10 @@ export async function GET(request: NextRequest) {
 
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: subscription.stripeCustomerId,
-      return_url: `${process.env.NEXTAUTH_URL}/settings`,
+      return_url: `${process.env.NEXTAUTH_URL}/settings?tab=subscription`,
     });
 
-    return NextResponse.json({ portalUrl: portalSession.url });
+    return NextResponse.json({ url: portalSession.url });
   } catch (error) {
     console.error('Portal session error:', error);
     return NextResponse.json(
@@ -37,4 +37,12 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+export async function GET() {
+  return createPortalSession();
+}
+
+export async function POST() {
+  return createPortalSession();
 }

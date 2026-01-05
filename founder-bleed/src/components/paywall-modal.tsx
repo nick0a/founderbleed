@@ -35,7 +35,7 @@ const TIERS = [
     tier: 'starter',
   },
   {
-    name: 'Pro',
+    name: 'Team',
     price: { monthly: 50, annual: 500 },
     features: [
       'Everything in Starter',
@@ -43,24 +43,23 @@ const TIERS = [
       'Team analytics',
       '$7.50/mo LLM budget',
     ],
-    tier: 'pro',
+    tier: 'team',
     popular: true,
   },
   {
-    name: 'Enterprise',
+    name: 'Pro',
     price: { monthly: 90, annual: 900 },
     features: [
-      'Everything in Pro',
+      'Everything in Team',
       'Priority email support (8hr)',
       'Custom integrations',
-      '$13.50/mo LLM budget',
     ],
-    tier: 'enterprise',
+    tier: 'pro',
   },
 ];
 
 export function PaywallModal({ open, onOpenChange, reason, feature }: PaywallModalProps) {
-  const [selectedTier, setSelectedTier] = useState<string>('pro');
+  const [selectedTier, setSelectedTier] = useState<string>('team');
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
   const [isLoading, setIsLoading] = useState(false);
   const pathname = usePathname();

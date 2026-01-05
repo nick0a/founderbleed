@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
   try {
     const { tier, billingPeriod = 'monthly', returnUrl } = await request.json();
 
-    if (!['starter', 'pro', 'enterprise'].includes(tier)) {
+    if (!['starter', 'team', 'pro'].includes(tier)) {
       return NextResponse.json({ error: 'Invalid tier' }, { status: 400 });
     }
 
