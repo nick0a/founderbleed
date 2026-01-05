@@ -19,10 +19,19 @@ export const users = pgTable('user', {
   currency: text('currency').default('USD'),
 
   // Tier rates (annual)
+  // Founder tier rates
+  founderUniversalRate: numeric('founder_universal_rate').default('200000'),
+  founderEngineeringRate: numeric('founder_engineering_rate').default('180000'),
+  founderBusinessRate: numeric('founder_business_rate').default('160000'),
+  // Senior tier rates
+  seniorUniversalRate: numeric('senior_universal_rate').default('120000'),
   seniorEngineeringRate: numeric('senior_engineering_rate').default('100000'),
   seniorBusinessRate: numeric('senior_business_rate').default('80000'),
+  // Junior tier rates
+  juniorUniversalRate: numeric('junior_universal_rate').default('50000'),
   juniorEngineeringRate: numeric('junior_engineering_rate').default('40000'),
   juniorBusinessRate: numeric('junior_business_rate').default('50000'),
+  // Support tier rates
   eaRate: numeric('ea_rate').default('25000'),
 
   // Settings
@@ -111,6 +120,23 @@ export const auditRuns = pgTable('audit_runs', {
   frequency: text('frequency').default('manual') // manual, weekly, monthly, annual
 });
 
+// Role recommendations
+export const roleRecommendations = pgTable('role_recommendations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  auditRunId: uuid('audit_run_id').references(() => auditRuns.id, { onDelete: 'cascade' }),
+  roleTitle: text('role_title').notNull(),
+  roleTier: text('role_tier').notNull(), // senior, junior, ea
+  vertical: text('vertical'), // engineering, business, null for EA
+  businessArea: text('business_area').notNull(),
+  hoursPerWeek: numeric('hours_per_week').notNull(),
+  costWeekly: numeric('cost_weekly').notNull(),
+  costMonthly: numeric('cost_monthly').notNull(),
+  costAnnual: numeric('cost_annual').notNull(),
+  jdText: text('jd_text'), // markdown
+  tasksList: jsonb('tasks_list'), // [{task: string, hoursPerWeek: number}]
+  createdAt: timestamp('created_at').defaultNow()
+});
+
 // Events
 export const events = pgTable('events', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -140,6 +166,9 @@ export const events = pgTable('events', {
   isLeave: boolean('is_leave').default(false),
   leaveDetectionMethod: text('leave_detection_method'),
   leaveConfidence: text('leave_confidence'), // high, medium, low
+
+  // Event category (for filtering non-work events)
+  eventCategory: text('event_category').default('work'), // work, leisure, exercise, travel
 
   // Planning
   planningScore: integer('planning_score'), // 0-100 per event
