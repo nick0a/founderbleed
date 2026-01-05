@@ -43,6 +43,13 @@
       "when": 1767601718951,
       "tag": "0005_minor_redwing",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1767601955944,
+      "tag": "0006_faulty_roland_deschain",
+      "breakpoints": true
     }
   ]
 }
