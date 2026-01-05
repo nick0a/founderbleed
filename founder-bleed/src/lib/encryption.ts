@@ -1,19 +1,13 @@
-import crypto from "crypto";
+import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 
 const ALGORITHM = "aes-256-gcm";
-const IV_LENGTH = 12;
+const IV_LENGTH = 16;
 
-export type EncryptedPayload = {
-  iv: string;
-  content: string;
-  tag: string;
-};
-
-function loadKey(): Buffer {
+function getKey(): Buffer {
   const rawKey = process.env.ENCRYPTION_KEY;
 
   if (!rawKey) {
-    throw new Error("ENCRYPTION_KEY is not set");
+    throw new Error("ENCRYPTION_KEY not set");
   }
 
   const normalized = rawKey.replace(/^"|"$/g, "");
@@ -28,28 +22,29 @@ function loadKey(): Buffer {
   return key;
 }
 
-export function encryptText(value: string): EncryptedPayload {
-  const iv = crypto.randomBytes(IV_LENGTH);
-  const cipher = crypto.createCipheriv(ALGORITHM, loadKey(), iv);
-  const encrypted = Buffer.concat([cipher.update(value, "utf8"), cipher.final()]);
-  const tag = cipher.getAuthTag();
+export function encrypt(text: string): string {
+  const iv = randomBytes(IV_LENGTH);
+  const cipher = createCipheriv(ALGORITHM, getKey(), iv);
 
-  return {
-    iv: iv.toString("base64"),
-    content: encrypted.toString("base64"),
-    tag: tag.toString("base64"),
-  };
+  let encrypted = cipher.update(text, "utf8", "hex");
+  encrypted += cipher.final("hex");
+
+  const authTag = cipher.getAuthTag();
+
+  return `${iv.toString("hex")}:${authTag.toString("hex")}:${encrypted}`;
 }
 
-export function decryptText(payload: EncryptedPayload): string {
-  const iv = Buffer.from(payload.iv, "base64");
-  const content = Buffer.from(payload.content, "base64");
-  const tag = Buffer.from(payload.tag, "base64");
+export function decrypt(encryptedData: string): string {
+  const [ivHex, authTagHex, encrypted] = encryptedData.split(":");
 
-  const decipher = crypto.createDecipheriv(ALGORITHM, loadKey(), iv);
-  decipher.setAuthTag(tag);
+  const iv = Buffer.from(ivHex, "hex");
+  const authTag = Buffer.from(authTagHex, "hex");
 
-  const decrypted = Buffer.concat([decipher.update(content), decipher.final()]);
+  const decipher = createDecipheriv(ALGORITHM, getKey(), iv);
+  decipher.setAuthTag(authTag);
 
-  return decrypted.toString("utf8");
+  let decrypted = decipher.update(encrypted, "hex", "utf8");
+  decrypted += decipher.final("utf8");
+
+  return decrypted;
 }
