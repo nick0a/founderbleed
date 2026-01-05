@@ -1,6 +1,9 @@
 import { auth } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 
+// Use Node.js runtime for crypto module support
+export const runtime = 'nodejs';
+
 export default auth((req) => {
   const isLoggedIn = !!req.auth;
   const isPublicRoute = ['/signin', '/error', '/'].some(path =>
