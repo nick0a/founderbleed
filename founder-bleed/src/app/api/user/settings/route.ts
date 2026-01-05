@@ -16,6 +16,12 @@ export async function GET() {
       salaryAnnual: true,
       salaryInputMode: true,
       currency: true,
+      // Team composition
+      teamComposition: true,
+      // Equity
+      companyValuation: true,
+      equityPercentage: true,
+      vestingPeriodYears: true,
       // Founder tier rates
       founderUniversalRate: true,
       founderEngineeringRate: true,
@@ -49,6 +55,12 @@ export async function PUT(request: Request) {
       salaryAnnual: data.salaryAnnual || null,
       salaryInputMode: data.salaryInputMode || 'annual',
       currency: data.currency || 'USD',
+      // Team composition
+      teamComposition: data.teamComposition || {},
+      // Equity
+      companyValuation: data.companyValuation || null,
+      equityPercentage: data.equityPercentage || null,
+      vestingPeriodYears: data.vestingPeriodYears || '4',
       // Founder tier rates
       founderUniversalRate: data.founderUniversalRate || '200000',
       founderEngineeringRate: data.founderEngineeringRate || '180000',

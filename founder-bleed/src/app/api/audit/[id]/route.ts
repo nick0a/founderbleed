@@ -113,7 +113,8 @@ export async function GET(
     columns: {
       name: true,
       username: true,
-      salaryAnnual: true
+      salaryAnnual: true,
+      teamComposition: true
     }
   });
 

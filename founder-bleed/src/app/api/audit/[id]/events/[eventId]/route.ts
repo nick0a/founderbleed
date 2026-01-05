@@ -14,7 +14,7 @@ export async function PATCH(
   }
 
   const { id, eventId } = await params;
-  const { finalTier, reconciled, eventCategory } = await request.json();
+  const { finalTier, reconciled, eventCategory, vertical, isLeave } = await request.json();
 
   // Verify the audit belongs to the user
   const auditRun = await db.query.auditRuns.findFirst({
@@ -38,6 +38,12 @@ export async function PATCH(
   }
   if (eventCategory !== undefined) {
     updateData.eventCategory = eventCategory;
+  }
+  if (vertical !== undefined) {
+    updateData.vertical = vertical;
+  }
+  if (isLeave !== undefined) {
+    updateData.isLeave = isLeave;
   }
 
   await db.update(events)
