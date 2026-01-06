@@ -1912,7 +1912,7 @@ export default function SettingsClient() {
                   <div>
                     <Label>Anonymous Mode</Label>
                     <p className="text-xs text-muted-foreground">
-                      Appear as "Anonymous Founder" on the leaderboard
+                      Appear as &quot;Anonymous Founder&quot; on the leaderboard
                     </p>
                   </div>
                   <Switch

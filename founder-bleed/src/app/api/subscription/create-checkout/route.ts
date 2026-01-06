@@ -37,6 +37,29 @@ export async function POST(request: NextRequest) {
       where: eq(subscriptions.userId, session.user.id),
     });
 
+    // Prevent double subscription to the same tier
+    if (existingSubscription && existingSubscription.status === 'active') {
+      // If trying to subscribe to the same tier, reject
+      if (existingSubscription.tier === tier) {
+        return NextResponse.json(
+          { error: 'You are already subscribed to this tier. Please manage your subscription from the Settings page.' },
+          { status: 400 }
+        );
+      }
+      // If upgrading/downgrading, redirect to customer portal instead
+      if (existingSubscription.stripeCustomerId) {
+        const portalSession = await stripe.billingPortal.sessions.create({
+          customer: existingSubscription.stripeCustomerId,
+          return_url: `${process.env.NEXTAUTH_URL || 'http://localhost:3003'}/settings`,
+        });
+        return NextResponse.json({
+          checkoutUrl: portalSession.url,
+          isPortal: true,
+          message: 'You already have an active subscription. Redirecting to manage your plan.'
+        });
+      }
+    }
+
     // Use the returnUrl if provided, otherwise fall back to dashboard
     const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3003';
     const successUrl = returnUrl

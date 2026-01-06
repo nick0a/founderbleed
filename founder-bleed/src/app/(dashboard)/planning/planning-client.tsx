@@ -9,7 +9,8 @@ import { CalendarWeekView } from '@/components/planning/calendar-week-view';
 import { ScopeUpgradeModal } from '@/components/planning/scope-upgrade-modal';
 import { ConversationSidebar, PlanningSession } from '@/components/planning/conversation-sidebar';
 import { PaywallModal } from '@/components/paywall-modal';
-import { Layout, MessageSquare, Loader2, GripVertical, PanelLeftClose, PanelLeft } from 'lucide-react';
+import { Layout, MessageSquare, Loader2, GripVertical, PanelLeftClose, PanelLeft, Home, Settings, BarChart3 } from 'lucide-react';
+import Link from 'next/link';
 import { toast } from 'sonner';
 
 type ViewMode = 'chat' | 'split';
@@ -398,7 +399,35 @@ export default function PlanningClient() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)]">
+    <div className="flex flex-col h-screen">
+      {/* Top Navigation Bar */}
+      <nav className="border-b bg-background px-4 py-2 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link href="/" className="font-bold text-lg">Founder Bleed</Link>
+          <div className="flex items-center gap-2">
+            <Link href="/dashboard">
+              <Button variant="ghost" size="sm">
+                <Home className="h-4 w-4 mr-1" />
+                Dashboard
+              </Button>
+            </Link>
+            <Link href="/rankings">
+              <Button variant="ghost" size="sm">
+                <BarChart3 className="h-4 w-4 mr-1" />
+                Rankings
+              </Button>
+            </Link>
+            <Link href="/settings">
+              <Button variant="ghost" size="sm">
+                <Settings className="h-4 w-4 mr-1" />
+                Settings
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </nav>
+
+      <div className="flex flex-1 overflow-hidden">
       {/* Conversation Sidebar */}
       {showSidebar && (
         <div className="w-64 flex-shrink-0">
@@ -520,6 +549,7 @@ export default function PlanningClient() {
             </div>
           )}
         </div>
+      </div>
       </div>
 
       {/* Modals */}

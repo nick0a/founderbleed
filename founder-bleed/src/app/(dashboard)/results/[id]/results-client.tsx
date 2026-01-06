@@ -159,6 +159,23 @@ export default function ResultsClient() {
   const [recentlyReconciled, setRecentlyReconciled] = useState<Set<string>>(new Set());
   const [pendingUpdates, setPendingUpdates] = useState<Map<string, string>>(new Map());
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isSubscriber, setIsSubscriber] = useState(false);
+
+  // Check subscription status
+  useEffect(() => {
+    const checkSubscription = async () => {
+      try {
+        const response = await fetch('/api/subscription/status');
+        if (response.ok) {
+          const data = await response.json();
+          setIsSubscriber(data.isSubscribed === true);
+        }
+      } catch (err) {
+        console.error('Failed to check subscription:', err);
+      }
+    };
+    checkSubscription();
+  }, []);
 
   // Load username from localStorage
   useEffect(() => {
@@ -490,8 +507,12 @@ export default function ResultsClient() {
   const { audit, events, roleRecommendations } = data;
   const metrics = audit.computedMetrics;
   const hasSalary = data.user?.salaryAnnual && parseFloat(data.user.salaryAnnual) > 0;
-  const heroMetric = hasSalary && metrics?.arbitrageAnnual && metrics.arbitrageAnnual > 0
-    ? `$${Math.round(metrics.arbitrageAnnual).toLocaleString()}`
+  const hasReclaimableHours = metrics?.reclaimableHoursPerWeek && metrics.reclaimableHoursPerWeek > 0;
+  const arbitrageValue = metrics?.arbitrageAnnual ?? 0;
+  const heroMetric = hasSalary && metrics?.arbitrageAnnual !== undefined && metrics.arbitrageAnnual !== null
+    ? arbitrageValue > 0
+      ? `$${Math.round(arbitrageValue).toLocaleString()}`
+      : '$0'
     : null;
   const shareUrl = shareToken && typeof window !== 'undefined'
     ? `${window.location.origin}/share/${shareToken}`
@@ -565,13 +586,22 @@ export default function ResultsClient() {
 
         {/* Hero Metric */}
         <div className="bg-gradient-to-r from-destructive/10 to-destructive/5 border border-destructive/20 rounded-lg p-6">
-          {heroMetric ? (
+          {heroMetric && heroMetric !== '$0' ? (
             <>
               <h1 className="text-3xl md:text-4xl font-bold text-destructive">
                 {username}, You&apos;re Losing {heroMetric} Every Year...
               </h1>
               <p className="text-muted-foreground mt-2">
                 on work that should be delegated to your team
+              </p>
+            </>
+          ) : hasSalary && !hasReclaimableHours ? (
+            <>
+              <h1 className="text-2xl md:text-3xl font-bold text-green-600 dark:text-green-500">
+                {username}, Your Calendar is Fully Optimized!
+              </h1>
+              <p className="text-muted-foreground mt-2">
+                No reclaimable hours found - you&apos;re already delegating effectively
               </p>
             </>
           ) : hasSalary ? (
@@ -996,16 +1026,33 @@ export default function ResultsClient() {
         </CardContent>
       </Card>
 
-      {/* Subscribe CTA */}
-      <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
-        <CardContent className="py-8 text-center">
-          <h3 className="text-xl font-semibold mb-2">Want more insights?</h3>
-          <p className="text-muted-foreground mb-4">
-            Upgrade to Pro for weekly automated audits, team analytics, and more.
-          </p>
-          <Button onClick={() => setShowPaywall(true)}>Upgrade to Pro</Button>
-        </CardContent>
-      </Card>
+      {/* Subscribe CTA - only show for non-subscribers */}
+      {!isSubscriber && (
+        <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
+          <CardContent className="py-8 text-center">
+            <h3 className="text-xl font-semibold mb-2">Want more insights?</h3>
+            <p className="text-muted-foreground mb-4">
+              Upgrade to Pro for weekly automated audits, team analytics, and more.
+            </p>
+            <Button onClick={() => setShowPaywall(true)}>Upgrade to Pro</Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Subscriber CTA - show dashboard link for subscribers */}
+      {isSubscriber && (
+        <Card className="bg-gradient-to-r from-green-500/5 to-green-500/10 border-green-500/20">
+          <CardContent className="py-8 text-center">
+            <h3 className="text-xl font-semibold mb-2">You&apos;re a Pro subscriber!</h3>
+            <p className="text-muted-foreground mb-4">
+              Access your dashboard for automated audits, planning assistant, and team analytics.
+            </p>
+            <Link href="/dashboard">
+              <Button>Go to Dashboard</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Paywall Modal */}
       <PaywallModal

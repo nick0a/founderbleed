@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -206,7 +207,7 @@ export default function SharePage() {
           </CardHeader>
           <CardContent>
             <Button asChild className="w-full">
-              <a href="/">Get your own audit</a>
+              <Link href="/">Get your own audit</Link>
             </Button>
           </CardContent>
         </Card>
@@ -298,7 +299,7 @@ export default function SharePage() {
           <div>
             <h1 className="text-xl font-bold">Founder Bleed</h1>
             <p className="text-sm text-muted-foreground">
-              {report.ownerName}'s Calendar Audit
+              {report.ownerName}&apos;s Calendar Audit
             </p>
           </div>
           <Button asChild>

@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
   try {
     let currentUser: { email: string | null; name: string | null; username: string | null } | null = null;
     let currentUserDomain: string | null = null;
-    let contactUserIds = new Set<string>();
+    const contactUserIds = new Set<string>();
 
     if (isAuthenticated && currentUserId) {
       // Get current user's company domain for team rankings

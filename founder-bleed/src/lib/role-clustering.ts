@@ -16,6 +16,7 @@ interface EventForClustering {
   businessArea: string;
   vertical: string;
   durationMinutes: number;
+  eventCategory?: string;
 }
 
 interface TierRates {
@@ -64,15 +65,32 @@ function generateRoleTitle(tier: string, vertical: string | null, businessArea: 
   return tierMap.default || `${tier.charAt(0).toUpperCase() + tier.slice(1)} Specialist`;
 }
 
+// Minimum weekly hours required to recommend any hire (8 hours = 1 day/week)
+const MIN_WEEKLY_HOURS_FOR_HIRE = 8;
+
 export function generateRoleRecommendations(
   events: EventForClustering[],
   auditDays: number,
   tierRates: TierRates
 ): RoleRecommendation[] {
-  // Filter to delegable tiers only
-  const delegable = events.filter(e => ['senior', 'junior', 'ea'].includes(e.finalTier));
+  // Filter to delegable tiers only AND only work category events
+  // Non-work events (travel, exercise, leisure) should never be assigned to hires
+  const delegable = events.filter(e =>
+    ['senior', 'junior', 'ea'].includes(e.finalTier) &&
+    (!e.eventCategory || e.eventCategory === 'work')
+  );
 
   if (delegable.length === 0) {
+    return [];
+  }
+
+  // Calculate total delegable weekly hours
+  const weeklyMultiplier = 7 / Math.max(auditDays, 1);
+  const totalDelegableHours = delegable.reduce((sum, e) => sum + e.durationMinutes / 60, 0);
+  const totalWeeklyDelegableHours = totalDelegableHours * weeklyMultiplier;
+
+  // If total delegable hours is less than minimum threshold, don't recommend any hires
+  if (totalWeeklyDelegableHours < MIN_WEEKLY_HOURS_FOR_HIRE) {
     return [];
   }
 
@@ -84,8 +102,7 @@ export function generateRoleRecommendations(
     clusters.get(key)!.push(event);
   }
 
-  // Calculate weekly hours per cluster
-  const weeklyMultiplier = 7 / Math.max(auditDays, 1);
+  // Process clusters
   const recommendations: RoleRecommendation[] = [];
   const consolidationBuckets: Record<string, EventForClustering[]> = { 
     senior: [], 

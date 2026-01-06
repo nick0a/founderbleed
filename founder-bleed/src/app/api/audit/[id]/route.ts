@@ -70,14 +70,15 @@ export async function GET(
       (new Date(auditRun.dateEnd).getTime() - new Date(auditRun.dateStart).getTime()) / (1000 * 60 * 60 * 24)
     ));
 
-    // Generate recommendations
+    // Generate recommendations (only from work category events)
     const generatedRoles = generateRoleRecommendations(
       decryptedEvents.map(e => ({
         title: e.title,
         finalTier: e.finalTier || 'founder',
         businessArea: e.businessArea || 'Operations',
         vertical: e.vertical || 'business',
-        durationMinutes: e.durationMinutes || 0
+        durationMinutes: e.durationMinutes || 0,
+        eventCategory: e.eventCategory || 'work'
       })),
       auditDays,
       tierRates

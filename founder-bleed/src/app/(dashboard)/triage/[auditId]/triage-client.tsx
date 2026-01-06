@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,7 +36,6 @@ import {
   Loader2,
   ArrowRight,
   Clock,
-  Calendar,
   Trash2,
   RefreshCw,
   CheckCircle,
@@ -83,6 +82,26 @@ const VERTICAL_TYPES = [
 ] as const;
 
 type VerticalType = typeof VERTICAL_TYPES[number]['value'];
+
+interface RawApiEvent {
+  id: string;
+  title: string;
+  startAt?: string;
+  startTime?: string;
+  endAt?: string;
+  endTime?: string;
+  durationMinutes?: number;
+  finalTier?: string;
+  delegationTier?: string;
+  vertical?: string;
+  verticalType?: string;
+  eventCategory?: string;
+  aiReasoning?: string;
+  isOverridden?: boolean;
+  reconciled?: boolean;
+  isReconciled?: boolean;
+  isLeave?: boolean;
+}
 
 interface AuditEvent {
   id: string;
@@ -195,7 +214,7 @@ export default function TriageClient() {
         const data = await response.json();
         setAudit(data.audit || data);
         // Map API field names to our interface and initialize defaults
-        const eventsWithCategory = (data.events || []).map((event: any) => ({
+        const eventsWithCategory = (data.events || []).map((event: RawApiEvent) => ({
           ...event,
           // Map API field names - database uses startAt/endAt, UI uses startTime/endTime
           startTime: event.startAt || event.startTime,

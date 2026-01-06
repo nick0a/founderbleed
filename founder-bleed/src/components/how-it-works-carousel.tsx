@@ -52,7 +52,9 @@ const steps: CarouselStep[] = [
 export function HowItWorksCarousel() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   const goToNext = useCallback(() => {
     setCurrentStep((prev) => (prev + 1) % steps.length);
@@ -66,9 +68,30 @@ export function HowItWorksCarousel() {
     setCurrentStep(index);
   }, []);
 
-  // Auto-advance with pause on hover
+  // Intersection Observer to detect when carousel is in view
   useEffect(() => {
-    if (isPaused) {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry.isIntersecting);
+      },
+      { threshold: 0.3 } // Trigger when 30% of the element is visible
+    );
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
+    return () => {
+      if (containerRef.current) {
+        observer.unobserve(containerRef.current);
+      }
+    };
+  }, []);
+
+  // Auto-advance with pause on hover - only when visible
+  useEffect(() => {
+    // Don't auto-advance if paused or not visible
+    if (isPaused || !isVisible) {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
@@ -83,12 +106,13 @@ export function HowItWorksCarousel() {
         clearInterval(intervalRef.current);
       }
     };
-  }, [isPaused, goToNext]);
+  }, [isPaused, isVisible, goToNext]);
 
   const CurrentIcon = steps[currentStep].icon;
 
   return (
     <div
+      ref={containerRef}
       className="w-full max-w-2xl mx-auto"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}

@@ -3,7 +3,7 @@
 // Global error boundary - this renders when an error occurs in the root layout
 // It must define its own <html> and <body> tags since it replaces the entire page
 export default function GlobalError({
-  error,
+  error: _error,
   reset,
 }: {
   error: Error & { digest?: string };

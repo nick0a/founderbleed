@@ -19,10 +19,11 @@ export default function SignInClient() {
         <div className="grid gap-4">
           <Button
             variant="outline"
+            size="lg"
             onClick={() => signIn('google', { callbackUrl: '/redirect' })}
-            className="w-full"
+            className="w-full py-6 text-lg"
           >
-            <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+            <svg className="mr-3 h-6 w-6" viewBox="0 0 24 24">
               <path
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                 fill="#4285F4"

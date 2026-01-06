@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { auditRuns, subscriptions } from '@/lib/db/schema';
-import { eq, desc, and } from 'drizzle-orm';
+import { subscriptions } from '@/lib/db/schema';
+import { eq, and } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,22 +28,8 @@ export default async function RedirectPage() {
     redirect('/dashboard');
   }
 
-  // For free users, check if they have an audit
-  const latestAudit = await db.query.auditRuns.findFirst({
-    where: eq(auditRuns.userId, session.user.id),
-    orderBy: [desc(auditRuns.createdAt)],
-  });
-
-  if (latestAudit) {
-    if (latestAudit.status === 'completed') {
-      // Free user with completed audit -> Results
-      redirect(`/results/${latestAudit.id}`);
-    } else if (latestAudit.status === 'processing') {
-      // Free user with processing audit -> Processing page (keep on results but will show loading)
-      redirect(`/results/${latestAudit.id}`);
-    }
-  }
-
-  // Free user with no audit -> New audit page
-  redirect('/audit/new');
+  // Free users (new or returning) always go to processing page
+  // This allows them to configure team composition, compensation, and date range
+  // before starting a new audit
+  redirect('/processing');
 }
