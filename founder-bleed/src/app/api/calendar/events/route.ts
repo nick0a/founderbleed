@@ -23,6 +23,26 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ events });
   } catch (error) {
     console.error('Calendar events error:', error);
-    return NextResponse.json({ error: 'Failed to fetch events' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+    // Check for specific error types
+    if (errorMessage.includes('No calendar connection found')) {
+      return NextResponse.json({
+        error: 'no_calendar_connection',
+        message: 'Please reconnect your Google Calendar'
+      }, { status: 400 });
+    }
+
+    if (errorMessage.includes('invalid_grant') || errorMessage.includes('Token has been expired or revoked')) {
+      return NextResponse.json({
+        error: 'token_expired',
+        message: 'Your Google Calendar access has expired. Please reconnect.'
+      }, { status: 401 });
+    }
+
+    return NextResponse.json({
+      error: 'calendar_error',
+      message: 'Failed to fetch calendar events'
+    }, { status: 500 });
   }
 }
