@@ -9,6 +9,7 @@ import { CalendarWeekView } from '@/components/planning/calendar-week-view';
 import { ScopeUpgradeModal } from '@/components/planning/scope-upgrade-modal';
 import { ConversationSidebar, PlanningSession } from '@/components/planning/conversation-sidebar';
 import { PaywallModal } from '@/components/paywall-modal';
+import { useCheckoutSync } from '@/hooks/use-checkout-sync';
 import { Layout, MessageSquare, Loader2, GripVertical, PanelLeftClose, PanelLeft, Home, Settings, BarChart3 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -32,6 +33,10 @@ interface StoredMessage {
 
 export default function PlanningClient() {
   const { data: session, status } = useSession();
+
+  // Handle checkout success - sync subscription from Stripe
+  const { syncComplete } = useCheckoutSync();
+
   const [viewMode, setViewMode] = useState<ViewMode>('split');
   const [showPaywall, setShowPaywall] = useState(false);
   const [showScopeUpgrade, setShowScopeUpgrade] = useState(false);
@@ -343,7 +348,7 @@ export default function PlanningClient() {
     if (status !== 'loading') {
       checkAccess();
     }
-  }, [status, fetchSessions]);
+  }, [status, fetchSessions, syncComplete]); // Re-check when subscription sync completes
 
   // Auto-select or create session when sessions load
   useEffect(() => {

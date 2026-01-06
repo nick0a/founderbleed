@@ -2,11 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { signOut } from 'next-auth/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Trophy, Users, Building2, Crown, Medal, Award, Eye, EyeOff, Clock, TrendingUp, LogIn } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Trophy, Users, Building2, Crown, Medal, Award, Eye, EyeOff, Clock, TrendingUp, LogIn, Home, Settings, LogOut, User, LayoutDashboard } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -94,6 +102,60 @@ export function RankingsClient({ isAuthenticated }: RankingsClientProps) {
 
   return (
     <div className="container mx-auto py-6 space-y-6">
+      {/* Navigation Bar */}
+      <nav className="flex items-center justify-between border-b pb-4 -mt-2 mb-4">
+        <div className="flex items-center gap-4">
+          <Link href="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
+            <Home className="h-4 w-4" />
+            Home
+          </Link>
+          <span className="text-muted-foreground">/</span>
+          <span className="font-medium">Rankings</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link href="/dashboard">
+            <Button variant="outline" size="sm">
+              <LayoutDashboard className="h-4 w-4 mr-2" />
+              Dashboard
+            </Button>
+          </Link>
+
+          {isAuthenticated ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <User className="h-4 w-4 mr-2" />
+                  Account
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem asChild>
+                  <Link href="/settings" className="cursor-pointer">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Settings
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="cursor-pointer text-red-600 focus:text-red-600"
+                  onClick={() => signOut({ callbackUrl: '/' })}
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Link href="/signin">
+              <Button size="sm">
+                <LogIn className="h-4 w-4 mr-2" />
+                Sign In
+              </Button>
+            </Link>
+          )}
+        </div>
+      </nav>
+
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
           <Trophy className="h-8 w-8 text-yellow-500" />

@@ -3,8 +3,10 @@ import Google from 'next-auth/providers/google';
 import { DrizzleAdapter } from '@auth/drizzle-adapter';
 import { db } from '@/lib/db';
 import { encrypt } from '@/lib/encryption';
-import { calendarConnections, users } from '@/lib/db/schema';
+import { calendarConnections, users, subscriptions } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { stripe } from '@/lib/stripe';
+import { LLM_BUDGETS, SubscriptionTier } from '@/lib/subscription';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: DrizzleAdapter(db),
@@ -95,7 +97,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           const existing = await db.query.calendarConnections.findFirst({
             where: eq(calendarConnections.userId, user.id)
           });
-          
+
           if (!existing) {
             await db.insert(calendarConnections).values({
               userId: user.id,
@@ -107,6 +109,72 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               hasWriteAccess: account.scope?.includes('calendar.events') || false,
             });
             console.log('Calendar connection stored for user:', user.id);
+          }
+
+          // Auto-sync subscription from Stripe if user has existing subscription
+          // This handles the case where user was deleted from DB but Stripe subscription exists
+          if (user.email) {
+            try {
+              console.log('[Auth linkAccount] Checking for existing Stripe subscription for:', user.email);
+              const customers = await stripe.customers.list({
+                email: user.email,
+                limit: 1,
+              });
+
+              if (customers.data.length > 0) {
+                const customerId = customers.data[0].id;
+                const stripeSubscriptions = await stripe.subscriptions.list({
+                  customer: customerId,
+                  status: 'active',
+                  limit: 1,
+                });
+
+                if (stripeSubscriptions.data.length > 0) {
+                  const stripeSub = stripeSubscriptions.data[0];
+                  const tier = (stripeSub.metadata?.tier as SubscriptionTier) || 'starter';
+
+                  // Access period dates - handle different Stripe API versions
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  const subAny = stripeSub as any;
+                  let periodStart: Date;
+                  let periodEnd: Date;
+
+                  if (typeof subAny.current_period_start === 'number') {
+                    periodStart = new Date(subAny.current_period_start * 1000);
+                    periodEnd = new Date(subAny.current_period_end * 1000);
+                  } else if (subAny.current_period_start instanceof Date) {
+                    periodStart = subAny.current_period_start;
+                    periodEnd = subAny.current_period_end;
+                  } else {
+                    periodStart = new Date();
+                    periodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+                  }
+
+                  // Check if subscription record already exists
+                  const existingSub = await db.query.subscriptions.findFirst({
+                    where: eq(subscriptions.userId, user.id)
+                  });
+
+                  if (!existingSub) {
+                    await db.insert(subscriptions).values({
+                      userId: user.id,
+                      stripeCustomerId: customerId,
+                      stripeSubscriptionId: stripeSub.id,
+                      tier,
+                      status: 'active',
+                      currentPeriodStart: periodStart,
+                      currentPeriodEnd: periodEnd,
+                      llmBudgetCents: LLM_BUDGETS[tier],
+                      llmSpentCents: 0,
+                    });
+                    console.log('[Auth linkAccount] Subscription synced from Stripe for user:', user.id, 'tier:', tier);
+                  }
+                }
+              }
+            } catch (subError) {
+              console.error('[Auth linkAccount] Failed to sync subscription:', subError);
+              // Don't fail signin if subscription sync fails
+            }
           }
         } catch (error) {
           console.error('Failed to store calendar tokens:', error);

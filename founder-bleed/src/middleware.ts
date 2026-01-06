@@ -11,7 +11,10 @@ export default auth((req) => {
   ) || req.nextUrl.pathname.startsWith('/share/');
 
   if (!isLoggedIn && !isPublicRoute) {
-    return NextResponse.redirect(new URL('/signin', req.url));
+    // Preserve the original URL as callbackUrl so user returns after signin
+    const signinUrl = new URL('/signin', req.url);
+    signinUrl.searchParams.set('callbackUrl', req.nextUrl.pathname + req.nextUrl.search);
+    return NextResponse.redirect(signinUrl);
   }
 
   return NextResponse.next();

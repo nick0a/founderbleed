@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { signOut } from 'next-auth/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useCheckoutSync } from '@/hooks/use-checkout-sync';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -116,6 +117,9 @@ export default function DashboardClient() {
   const [topScores, setTopScores] = useState<TopScores | null>(null);
   const [username, setUsername] = useState<string>('');
 
+  // Handle checkout success - sync subscription from Stripe
+  const { syncComplete } = useCheckoutSync();
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -175,7 +179,7 @@ export default function DashboardClient() {
     };
 
     fetchData();
-  }, []);
+  }, [syncComplete]); // Re-fetch when subscription sync completes
 
   const calculateTopScores = (audits: AuditRun[]): TopScores => {
     let maxUnique = 0;

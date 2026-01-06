@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { useCheckoutSync } from '@/hooks/use-checkout-sync';
 import {
   Select,
   SelectContent,
@@ -142,6 +143,9 @@ export default function ResultsClient() {
   const params = useParams();
   const auditId = params.id as string;
 
+  // Handle checkout success - sync subscription from Stripe
+  const { syncComplete } = useCheckoutSync();
+
   const [data, setData] = useState<AuditData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -175,7 +179,7 @@ export default function ResultsClient() {
       }
     };
     checkSubscription();
-  }, []);
+  }, [syncComplete]); // Re-check when subscription sync completes
 
   // Load username from localStorage
   useEffect(() => {

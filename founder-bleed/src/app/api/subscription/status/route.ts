@@ -32,7 +32,23 @@ async function trySyncFromStripe(userId: string, email: string | null | undefine
 
     const stripeSub = stripeSubscriptions.data[0];
     const tier = (stripeSub.metadata?.tier as SubscriptionTier) || 'starter';
-    const sub = stripeSub as unknown as { current_period_start: number; current_period_end: number };
+
+    // Access period dates - handle different Stripe API versions
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const subAny = stripeSub as any;
+    let periodStart: Date;
+    let periodEnd: Date;
+
+    if (typeof subAny.current_period_start === 'number') {
+      periodStart = new Date(subAny.current_period_start * 1000);
+      periodEnd = new Date(subAny.current_period_end * 1000);
+    } else if (subAny.current_period_start instanceof Date) {
+      periodStart = subAny.current_period_start;
+      periodEnd = subAny.current_period_end;
+    } else {
+      periodStart = new Date();
+      periodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    }
 
     // Create subscription record
     const [created] = await db.insert(subscriptions).values({
@@ -41,8 +57,8 @@ async function trySyncFromStripe(userId: string, email: string | null | undefine
       stripeSubscriptionId: stripeSub.id,
       tier,
       status: 'active',
-      currentPeriodStart: new Date(sub.current_period_start * 1000),
-      currentPeriodEnd: new Date(sub.current_period_end * 1000),
+      currentPeriodStart: periodStart,
+      currentPeriodEnd: periodEnd,
       llmBudgetCents: LLM_BUDGETS[tier],
       llmSpentCents: 0,
     }).returning();

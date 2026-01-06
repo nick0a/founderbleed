@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { useCheckoutSync } from '@/hooks/use-checkout-sync';
 import {
   Select,
   SelectContent,
@@ -187,6 +188,9 @@ export default function SettingsClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab = searchParams.get('tab') || 'account';
+
+  // Handle checkout success - sync subscription from Stripe
+  const { syncComplete } = useCheckoutSync();
 
   const [activeTab, setActiveTab] = useState(initialTab);
   const [settings, setSettings] = useState<UserSettings>({
@@ -371,7 +375,7 @@ export default function SettingsClient() {
     };
 
     fetchData();
-  }, []);
+  }, [syncComplete]); // Re-fetch when subscription sync completes
 
   // Update URL when tab changes
   useEffect(() => {
@@ -1239,10 +1243,6 @@ export default function SettingsClient() {
                     <span>LLM Budget Usage</span>
                     <span>
                       {Math.round(((subscription.llmSpentCents || 0) / subscription.llmBudgetCents) * 100)}%
-                      <span className="text-muted-foreground ml-1">
-                        (${((subscription.llmSpentCents || 0) / 100).toFixed(2)} / $
-                        {(subscription.llmBudgetCents / 100).toFixed(2)})
-                      </span>
                     </span>
                   </div>
                   <div className="h-2 bg-muted rounded-full overflow-hidden">
