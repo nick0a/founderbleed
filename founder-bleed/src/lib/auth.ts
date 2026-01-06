@@ -65,6 +65,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 })
                 .where(eq(calendarConnections.userId, userId));
               console.log('Calendar connection updated. hasWriteAccess:', hasWriteScope);
+            } else {
+              // Create calendar connection if it doesn't exist (e.g., user was reset or connection was deleted)
+              await db.insert(calendarConnections).values({
+                userId,
+                provider: 'google',
+                accessToken: encrypt(account.access_token),
+                refreshToken: account.refresh_token ? encrypt(account.refresh_token) : null,
+                tokenExpiresAt: account.expires_at ? new Date(account.expires_at * 1000) : null,
+                scopes: account.scope?.split(' ') || [],
+                hasWriteAccess: hasWriteScope,
+              });
+              console.log('Calendar connection created in signIn callback for user:', userId);
             }
           }
         } catch (error) {

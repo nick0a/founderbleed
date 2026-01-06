@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { auditRuns, events, users } from '@/lib/db/schema';
+import { auditRuns, events, users, calendarConnections } from '@/lib/db/schema';
 import { getEvents } from '@/lib/google-calendar';
 import { classifyEvent } from '@/lib/classification';
 import { detectLeave } from '@/lib/leave-detection';
@@ -36,6 +36,18 @@ export async function POST(request: NextRequest) {
 
   if (!user) {
     return NextResponse.json({ error: 'User not found' }, { status: 404 });
+  }
+
+  // Check calendar connection exists
+  const calendarConnection = await db.query.calendarConnections.findFirst({
+    where: eq(calendarConnections.userId, session.user.id)
+  });
+
+  if (!calendarConnection) {
+    return NextResponse.json(
+      { error: 'no_calendar_connection', message: 'Please reconnect your Google Calendar to run an audit.' },
+      { status: 400 }
+    );
   }
 
   // Check audit quota (free users only get 1 audit)

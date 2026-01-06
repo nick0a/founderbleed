@@ -274,7 +274,17 @@ function ProcessingPageContent() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to create audit');
+        if (error.error === 'no_calendar_connection') {
+          toast.error('Please reconnect your Google Calendar');
+          router.push('/dashboard?reconnect=calendar');
+          return;
+        }
+        if (error.error === 'free_audit_used') {
+          toast.error(error.message || 'Free audit already used. Upgrade to run more audits.');
+          router.push('/pricing');
+          return;
+        }
+        throw new Error(error.message || error.error || 'Failed to create audit');
       }
 
       const data = await response.json();
