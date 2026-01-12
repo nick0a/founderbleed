@@ -44,8 +44,6 @@ export async function GET() {
         isExpired: connection.tokenExpiresAt ? new Date(connection.tokenExpiresAt) < new Date() : 'unknown',
         scopes: connection.scopes,
         hasWriteAccess: connection.hasWriteAccess,
-        createdAt: connection.createdAt,
-        updatedAt: connection.updatedAt
       }
     });
   } catch (error) {
