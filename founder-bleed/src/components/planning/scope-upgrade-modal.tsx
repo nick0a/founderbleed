@@ -24,7 +24,7 @@ export function ScopeUpgradeModal({ open, onOpenChange }: ScopeUpgradeModalProps
   const handleGrantAccess = async () => {
     setLoading(true);
     try {
-      // First check if already has write access
+      // Request the OAuth redirect URL for write scope
       const response = await fetch('/api/calendar/upgrade-scope', {
         method: 'POST',
       });
@@ -36,16 +36,17 @@ export function ScopeUpgradeModal({ open, onOpenChange }: ScopeUpgradeModalProps
           onOpenChange(false);
           return;
         }
+
+        if (data.redirectUrl) {
+          // Redirect to Google OAuth with write scope
+          window.location.href = data.redirectUrl;
+          return;
+        }
       }
 
-      // Use NextAuth signIn with upgraded scopes - this uses the already-registered callback
+      // Fallback: use NextAuth signIn if no redirect URL
       await signIn('google', {
         callbackUrl: '/planning?write_access=granted',
-      }, {
-        // Pass additional authorization params for the write scope
-        scope: 'openid email profile https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar.events',
-        access_type: 'offline',
-        prompt: 'consent',
       });
     } catch (error) {
       console.error('Scope upgrade error:', error);
